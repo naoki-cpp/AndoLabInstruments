@@ -1,4 +1,5 @@
 import pyvisa as visa
+from enum import Enum
 
 class LI5650:
     def __init__(self,instrument:visa.Resource):
@@ -176,7 +177,12 @@ class LI5650:
         self.data4_format(False, data4)
         return
     
-    def volt_sensitivity(self, read:bool, detector:int, sensitivity:float):
+    
+    class Detector(Enum):
+        PRIMARY = 1
+        SECONDARY = 2
+
+    def volt_sensitivity(self, read:bool, detector:Detector, sensitivity:float):
         """
         detector
         ------
@@ -190,7 +196,7 @@ class LI5650:
             self.instrument.write(':SENS:VOLT' + str(detector) +':AC:RANG ' + str(sensitivity))
             return 0
     
-    def curr_sensitivity(self, read:bool, detector:int, sensitivity:float):
+    def curr_sensitivity(self, read:bool, detector:Detector, sensitivity:float):
         """
         detector
         ------
@@ -204,7 +210,7 @@ class LI5650:
             self.instrument.write(':SENS:CURR' + str(detector) +':AC:RANG ' + str(sensitivity))
             return 0
     
-    def set_sensitivity(self, detector:int, sensitivity:float):
+    def set_sensitivity(self, detector:Detector, sensitivity:float):
         """
         detector
         ------
@@ -235,7 +241,7 @@ class LI5650:
     
     #Filter setings
 
-    def filter_type(self, read:bool, detector:int, filter_slope:str):
+    def filter_type(self, read:bool, detector:Detector, filter_slope:str):
         """
         detector
         ------
@@ -254,8 +260,7 @@ class LI5650:
         else:
             self.instrument.write(':FILT:TYPE ' + filter_slope)
             return ""
-    
-    def filter_time_constant(self, read:bool, detector:int, time_constant:float):
+    def filter_time_constant(self, read:bool, detector:Detector, time_constant:float):
         """
         detector
         ------
@@ -269,7 +274,7 @@ class LI5650:
             self.instrument.write(':FILT' + str(detector) +':TCON ' + str(time_constant))
             return ""
     
-    def filter_slope(self, read:bool, detector:int, slope:int):
+    def filter_slope(self, read:bool, detector:Detector, slope:int):
         """
         detector
         ------
@@ -321,7 +326,7 @@ class LI5650:
             self.instrument.write(':INP2:TYPE ' + reference_type)
             return ""
         
-    def phase_shift(self, read:bool, detector:int, phase_shift:float):
+    def phase_shift(self, read:bool, detector:Detector, phase_shift:float):
         if(read):
             self.instrument.write(':PHAS' + str(detector) +'?')
             return int(self.instrument.read())
@@ -355,7 +360,7 @@ class LI5650:
         elif data_type == 'INTeger':
             return #data
     
-    def enable_harmonics(self, read:bool, detector:int, enable:str, order:int):
+    def enable_harmonics(self, read:bool, detector:Detector, enable:str, order:int):
         """
         detector
         ------
