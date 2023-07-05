@@ -1,0 +1,1 @@
+from .adcmt6240 import ADCMT6240
