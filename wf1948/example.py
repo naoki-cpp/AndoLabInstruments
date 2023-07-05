@@ -1,6 +1,8 @@
 from .wf1948 import WF1948
+import pyvisa as visa
 
 if __name__ == "__main__":
+    rm=visa.ResourceManager()
     wf1948 = WF1948(rm.open_resource("GPIB0::2::INSTR"))
     wf1948.initialize()
 
