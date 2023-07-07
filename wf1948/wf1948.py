@@ -1,4 +1,5 @@
 import pyvisa as visa
+from enum import Enum
 
 class WF1948:
     def __init__(self,instrument:visa.Resource):
@@ -10,7 +11,11 @@ class WF1948:
     def initialize(self):
         self.instrument.write('*RST')
     
-    def set_frequency(self, read:bool, channel:int, frequency:float, unit:str):
+    class Channel(Enum):
+        CH1 = 1
+        CH2 = 2
+
+    def set_frequency(self, read:bool, channel:Channel, frequency:float, unit:str):
         """
         channel :1 or 2
         unit    :M, K, HZ, U, N, USER
@@ -22,7 +27,7 @@ class WF1948:
             self.instrument.write('SOUR' + str(channel) + ':FREQ ' + str(frequency) + unit)
             return ""
     
-    def set_voltage(self, read:bool, channel:int, voltage:float, unit:str):
+    def set_voltage(self, read:bool, channel:Channel, voltage:float, unit:str):
         """
         channel :1 or 2
         unit    :M, K, HZ, U, N, USER
@@ -37,7 +42,7 @@ class WF1948:
             self.instrument.write('SOUR' + str(channel) + ':VOLT:LEV:IMM:AMPL ' + str(voltage) + unit)
             return []
         
-    def set_function(self, read:bool, channel:int, function:str):
+    def set_function(self, read:bool, channel:Channel, function:str):
         """
         function
         ------
