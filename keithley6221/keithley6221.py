@@ -7,6 +7,10 @@ class Keithley6221:
         print(idn)
         return
     
+    def __del__(self):
+        self.instrument.close()
+        return
+    
     def abort(self):
         self.instrument.write(':SOUR:WAVE:ABOR')
         return
