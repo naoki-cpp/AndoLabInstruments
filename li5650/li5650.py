@@ -13,6 +13,30 @@ class LI5650:
         return
     
     def data(self, read:bool, measurement_data:int):
+        """
+        setting data format
+
+        measurement_data
+        -------
+        sum of the numbers below
+        1 STATUS (16 bits = 1 word)
+            Reads the measurement status.
+            Measurement status content
+        2 DATA1 (16 bits = 1 word)
+            Reads the value of DATA1.
+        4 DATA2 (16 bits = 1 word)
+            Reads the value of DATA2.
+        8 DATA3 (16 bits = 1 word)
+            Reads the value of DATA3.
+        16 DATA4 (16 bits = 1 word)
+            Reads the value of DATA4.
+        32 FREQ (32 bits = 2 words)
+            Records the frequency value.
+            The fundamental wave or primary frequency is read when the
+            detection mode is SINGLE, DUAL1, or DUAL2, and the
+            secondary frequency is read when the detection mode is
+            CASCADE.
+        """
         if(read):
             self.instrument.write('DATA?')
             return float(self.instrument.read())
