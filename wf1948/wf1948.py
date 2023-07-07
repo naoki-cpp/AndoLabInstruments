@@ -2,10 +2,14 @@ import pyvisa as visa
 from enum import Enum
 
 class WF1948:
-    def __init__(self,instrument:visa.Resource):
+    def __init__(self, instrument:visa.Resource):
         self.instrument = instrument
         idn = instrument.query('*IDN?')
         print(idn)
+        return
+    
+    def __del__(self):
+        self.instrument.close()
         return
     
     def initialize(self):
