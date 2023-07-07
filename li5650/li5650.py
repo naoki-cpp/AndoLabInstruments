@@ -19,6 +19,7 @@ class LI5650:
         measurement_data
         -------
         sum of the numbers below
+        
         1 STATUS (16 bits = 1 word)
             Reads the measurement status.
             Measurement status content
