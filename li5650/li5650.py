@@ -407,5 +407,3 @@ class LI5650:
             if(enable == 'ON'):
                 self.instrument.write(':FREQ' + str(detector) +':MULT ' + str(order))
             return ""
-    
-    
