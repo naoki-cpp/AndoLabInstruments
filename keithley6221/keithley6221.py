@@ -1,7 +1,7 @@
 import pyvisa as visa
 
 class Keithley6221:
-    def __init__(self,instrument:visa.Resource):
+    def __init__(self, instrument:visa.Resource):
         self.instrument = instrument
         idn = instrument.query('*IDN?')
         print(idn)
