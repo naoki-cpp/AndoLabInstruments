@@ -62,6 +62,14 @@ class ADCMT6240:
         self.instrument.write('OPR')
         return
     
+    def suspend_output(self):
+        self.instrument.write('SUS')
+        return
+    
+    def stanby_output(self):
+        self.instrument.write('SBY')
+        return
+    
     class TriggerMode(Enum):
         AUTO = 0
         HOLD = 1
@@ -79,6 +87,7 @@ class ADCMT6240:
         VOLTAGE = 1
         CURRENT = 2
         RESISTANCE = 3
+    
     def configure_measurement(self, measurement_type:MeasurementType):
         measurement_map = {
             self.MeasurementType.OFF:       'F0',
@@ -88,3 +97,4 @@ class ADCMT6240:
         }
         self.instrument.write(measurement_map[measurement_type])
         return
+    
