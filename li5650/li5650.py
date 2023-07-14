@@ -206,6 +206,45 @@ class LI5650:
         self.data4_format(False, data4)
         return
     
+    def data1_offset(self, read:bool, offset:float):
+        """
+        """
+        if(read):
+            self.instrument.write(':CALC1:OFFS?')
+            return str.strip(self.instrument.read())
+        else:
+            self.instrument.write(':CALC1:OFFS ' + str(offset))
+            return 0
+    
+    def data2_offset(self, read:bool, offset:float):
+        """
+        """
+        if(read):
+            self.instrument.write(':CALC2:OFFS?')
+            return str.strip(self.instrument.read())
+        else:
+            self.instrument.write(':CALC2:OFFS ' + str(offset))
+            return 0
+
+    def data3_offset(self, read:bool, offset:float):
+        """
+        """
+        if(read):
+            self.instrument.write(':CALC3:OFFS?')
+            return str.strip(self.instrument.read())
+        else:
+            self.instrument.write(':CALC3:OFFS ' + str(offset))
+            return 0
+    
+    def data4_offset(self, read:bool, offset:float):
+        """
+        """
+        if(read):
+            self.instrument.write(':CALC4:OFFS?')
+            return str.strip(self.instrument.read())
+        else:
+            self.instrument.write(':CALC4:OFFS ' + str(offset))
+            return 0
     
     class Detector(Enum):
         PRIMARY = 1
