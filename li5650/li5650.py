@@ -219,10 +219,10 @@ class LI5650:
         2   :secondary
         """
         if(read):
-            self.instrument.write(':SENS:VOLT' + str(detector) +':AC:RANG?')
+            self.instrument.write(':SENS:VOLT' + str(detector.value) +':AC:RANG?')
             return str.strip(self.instrument.read())
         else:
-            self.instrument.write(':SENS:VOLT' + str(detector) +':AC:RANG ' + str(sensitivity))
+            self.instrument.write(':SENS:VOLT' + str(detector.value) +':AC:RANG ' + str(sensitivity))
             return 0
     
     def curr_sensitivity(self, read:bool, detector:Detector, sensitivity:float):
@@ -233,10 +233,10 @@ class LI5650:
         2   :secondary
         """
         if(read):
-            self.instrument.write(':SENS:CURR' + str(detector) +':AC:RANG?')
+            self.instrument.write(':SENS:CURR' + str(detector.value) +':AC:RANG?')
             return str.strip(self.instrument.read())
         else:
-            self.instrument.write(':SENS:CURR' + str(detector) +':AC:RANG ' + str(sensitivity))
+            self.instrument.write(':SENS:CURR' + str(detector.value) +':AC:RANG ' + str(sensitivity))
             return 0
     
     def set_sensitivity(self, detector:Detector, sensitivity:float):
@@ -284,7 +284,7 @@ class LI5650:
 
         """
         if(read):
-            self.instrument.write(':FILT' + str(detector) +':TYPE?')
+            self.instrument.write(':FILT' + str(detector.value) +':TYPE?')
             return str.strip(self.instrument.read())
         else:
             self.instrument.write(':FILT:TYPE ' + filter_slope)
@@ -297,10 +297,10 @@ class LI5650:
         2   :secondary
         """
         if(read):
-            self.instrument.write(':FILT' + str(detector) +':TCON?')
+            self.instrument.write(':FILT' + str(detector.value) +':TCON?')
             return float(self.instrument.read())
         else:
-            self.instrument.write(':FILT' + str(detector) +':TCON ' + str(time_constant))
+            self.instrument.write(':FILT' + str(detector.value) +':TCON ' + str(time_constant))
             return ""
     
     def filter_slope(self, read:bool, detector:Detector, slope:int):
@@ -318,10 +318,10 @@ class LI5650:
         24
         """
         if(read):
-            self.instrument.write(':FILT' + str(detector) +':SLOP?')
+            self.instrument.write(':FILT' + str(detector.value) +':SLOP?')
             return int(self.instrument.read())
         else:
-            self.instrument.write(':FILT' + str(detector) +':SLOP ' + str(slope))
+            self.instrument.write(':FILT' + str(detector.value) +':SLOP ' + str(slope))
             return ""
     
     # reference settings
@@ -357,10 +357,10 @@ class LI5650:
         
     def phase_shift(self, read:bool, detector:Detector, phase_shift:float):
         if(read):
-            self.instrument.write(':PHAS' + str(detector) +'?')
+            self.instrument.write(':PHAS' + str(detector.value) +'?')
             return int(self.instrument.read())
         else:
-            self.instrument.write(':PHAS' + str(detector) + ' ' + str(phase_shift))
+            self.instrument.write(':PHAS' + str(detector.value) + ' ' + str(phase_shift))
             return ""
     
     def data_transfer_format(self, read:bool, format:str):
@@ -402,13 +402,13 @@ class LI5650:
         OFF
         """
         if(read):
-            self.instrument.write(':FREQ' + str(detector) +':HARM?')
+            self.instrument.write(':FREQ' + str(detector.value) +':HARM?')
             freq_harm = str.strip(self.instrument.read())
-            self.instrument.write(':FREQ' + str(detector) +':MULT?')
+            self.instrument.write(':FREQ' + str(detector.value) +':MULT?')
             freq_multi = str.strip(self.instrument.read())
             return [freq_harm, freq_multi]
         else:
-            self.instrument.write(':FREQ' + str(detector) +':HARM ' + enable)
+            self.instrument.write(':FREQ' + str(detector.value) +':HARM ' + enable)
             if(enable == 'ON'):
-                self.instrument.write(':FREQ' + str(detector) +':MULT ' + str(order))
+                self.instrument.write(':FREQ' + str(detector.value) +':MULT ' + str(order))
             return ""
