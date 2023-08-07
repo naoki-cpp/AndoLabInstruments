@@ -50,6 +50,14 @@ class ADCMT6240:
         self.instrument.write(source_map[source_function] + str(outputvalue))
         return
     
+    def get_output_value(self, source_function:SourceFunctionType):
+        source_map = {
+            self.SourceFunctionType.VOLTAGE: 'SOV',
+            self.SourceFunctionType.CURRENT: 'SOI'
+        }
+        self.instrument.write(source_map[source_function] + '?')
+        return float(self.instrument.read().strip()[3:])
+
     def configure_limiter(self, source_function:SourceFunctionType, limiter_value:float):
         """
         If Source Function is Voltage then Limiter function is Current
