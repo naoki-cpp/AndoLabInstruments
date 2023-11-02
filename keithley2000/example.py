@@ -7,5 +7,6 @@ if __name__ == "__main__":
     keithley2000.initialize()
     keithley2000.configure_DC_volts()
     keithley2000.configure_trigger(Keithley2000.Source.IMMEDIATE)
+    keithley2000.initiate_measurement()
     voltage, _, _ = keithley2000.read_single()
     print(voltage)
