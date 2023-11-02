@@ -1,4 +1,4 @@
-from .keithley2182 import Keithley2182
+from .keithley2000 import Keithley2000
 import pyvisa as visa
     
 if __name__ == "__main__":
