@@ -152,3 +152,23 @@ class Keithley6221:
         if(init_sweep):
             self.instrument.write(':SOUR:WAVE:INIT')
         return
+## DC settings
+    def set_current_level(self, current):
+        self.instrument.write(':SOUR:CURR ' + str(current))
+        return
+
+    def set_voltage_limit(self, voltage_limit):
+        self.instrument.write(':SOUR:CURR:COMP ' +str(voltage_limit))
+        return
+
+    def set_direct_current_params(self, range, current, voltage_limit):
+        self.set_current_range(False, range)
+        self.set_current_level(current)
+        self.set_voltage_limit(voltage_limit)
+        return
+    
+    def set_output_state(self, flag):
+        if(flag):
+            self.instrument.write(':OUTP 1')
+        else:
+            self.instrument.write(':OUTP 0')
