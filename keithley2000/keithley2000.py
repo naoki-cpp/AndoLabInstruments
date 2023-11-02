@@ -99,10 +99,13 @@ class Keithley2000():
         if(err.split(',')[0] != '0'):print(err)
         
         return
-    
-    def read_single(self):
+    def initiate_measurement(self):
         self.instrument.write(':FORM ASC;:FORM:ELEM READ,UNIT,CHAN;')
-        self.instrument.write(':DATA?')
+        self.instrument.write('INITiate')
+        return
+
+    def read_single(self):
+        self.instrument.write(':DATA:FRESh?')
         data = self.instrument.read().strip()
         raw, channel = data.split(',')
         raw_voltage, strings = parse("{:f}{:S}", raw)
