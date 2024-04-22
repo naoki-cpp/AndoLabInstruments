@@ -15,7 +15,9 @@ class LI5640:
     def initialize(self):
         self.instrument.write('*RST')
         return
-    
+    ################################################################
+    ## input setings
+    ################################################################
     class INPUT_COUPLING(Enum):
         AC = 0
         DC = 1
@@ -53,7 +55,37 @@ class LI5640:
         else:
             self.instrument.write('ISRC ' + str(input.value))
             return
-    
+    ################################################################
+    ## reference settings
+    ################################################################
+    class REFERENCE_SOURCE(Enum):
+        REFIN               = 0
+        INTERNAL_OSCILLATOR = 1
+        SIGNAL              = 2
+
+    def set_reference_source(self, read:bool, reference:REFERENCE_SOURCE):
+        if(read):
+            self.instrument.write('RSRC?')
+            return str.strip(self.instrument.read())
+        else:
+            self.instrument.write('RSRC ' + str(reference.value))
+            return
+    class REFERENCE_EDGE(Enum):
+        SINE_POS    = 0
+        TTL_POS     = 1
+        TTL_NEG     = 2
+
+    def set_reference_edge(self, read:bool, edge:REFERENCE_EDGE):
+        if(read):
+            self.instrument.write('REDG?')
+            return str.strip(self.instrument.read())
+        else:
+            self.instrument.write('REDG ' + str(edge.value))
+            return
+        
+    ################################################################
+    ## filter settings
+    ################################################################
     class LINE_FILTER(Enum):
         THROUGH         = 0
         LINE            = 1
@@ -84,7 +116,9 @@ class LI5640:
             else:
                 self.instrument.write('ITHR ' + str(1))
             return
-    
+    ########################################################################
+    ## dynamic reserve
+    ########################################################################
     class DYNAMIC_RESERVE(Enum):
         HIGH    =   0
         MEDIUM  =   1
@@ -97,7 +131,9 @@ class LI5640:
         else:
             self.instrument.write('DRSV ' + str(dreserve.value))
             return
-
+    ########################################################################
+    ## sensityvity settings
+    ########################################################################
     class VOLTAGE_SENSITIVITY(Enum):
         _2nV    = 0
         _5nV    = 1
@@ -192,7 +228,10 @@ class LI5640:
         _3ks    = 17
         _10ks   = 18
         _30ks   = 19
-        
+    
+    ########################################################################
+    ## time constant settings
+    ########################################################################
     def set_time_constant(self, read:bool, timeconstant):
         if(read):
             self.instrument.write('TCON')
@@ -229,7 +268,9 @@ class LI5640:
         else:
             self.instrument.write('SLOP ' + str(slope.value))
             return
-    
+    ################################################################
+    ## data settings
+    ################################################################
     class DATA1TYPE(Enum):
         X       = 0
         R       = 1
