@@ -82,7 +82,26 @@ class LI5640:
         else:
             self.instrument.write('REDG ' + str(edge.value))
             return
+    
+    class HARMONIC_NUMBER(Enum):
+        INTERNAL_F  = 0
+        INTERNAL_2F = 1
+        REFERENCE_F = 2
+        REFERENCE_2F= 3
+        SIGNAL_F    = 4
+        SIGNAL_2F   = 5
+        INTERNAL    = 6
+        REFERENCE   = 8
+        SIGNAL      = 9
         
+    def set_harmonic_number(self, read:bool, number:HARMONIC_NUMBER):
+        if(read):
+            self.instrument.write('BRM?')
+            return str.strip(self.instrument.read())
+        else:
+            self.instrument.write('BRM ' + str(number.value))
+            return
+
     ################################################################
     ## filter settings
     ################################################################
