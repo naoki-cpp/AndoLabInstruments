@@ -1,1 +1,1 @@
-from .toei_magnet.py import toei_magnet
+from .toei_magnet import toei_magnet
