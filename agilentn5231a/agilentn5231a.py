@@ -1,3 +1,7 @@
+from pymeasure.instruments import Instrument
+import inspect
+from enum import Enum
+
 class AgilentN5231A(Instrument):
     class SCATTERING_PARAMETERS(Enum):
         S11 = "S11"
