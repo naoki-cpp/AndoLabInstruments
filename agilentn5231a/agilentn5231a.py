@@ -1,7 +1,6 @@
 from pymeasure.instruments import Instrument
 import inspect
 from enum import Enum
-
 class AgilentN5231A(Instrument):
     class SCATTERING_PARAMETERS(Enum):
         S11 = "S11"
@@ -182,7 +181,7 @@ class AgilentN5231A(Instrument):
         err = self.error()
         if(err.split(',')[0] != '+0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
-        if (int(register) >> 4) & 1 == 0:
+        if (int(register) >> 4) & 1 == 1:
             return True
         else:
             return False
@@ -203,6 +202,6 @@ class AgilentN5231A(Instrument):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
 
         return data
-    
+
     def shutdown(self):
         self.enable_rf_power(False)
