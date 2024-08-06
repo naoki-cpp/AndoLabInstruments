@@ -203,3 +203,6 @@ class AgilentN5231A(Instrument):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
 
         return data
+    
+    def shutdown(self):
+        self.enable_rf_power(False)
