@@ -143,7 +143,32 @@ class AgilentN5231A(Instrument):
         if(err.split(',')[0] != '+0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
         return err
+
+    def configure_power(self, port:int, power:float, enable_power_slope:bool = False, power_slope:float = 0, enable_auto_attenuation:bool = False, attenuation:float = 0, channel:int = 1):
+        """
+        power: dBm
+        """
+        self.write('SOUR' + str(channel) + ':POW' + str(port) + ':ATT ' + str(attenuation))
+        self.write('SOUR' + str(channel) + ':POW' + str(port) + ':ATT:AUTO ' + str(int(enable_auto_attenuation)))
+        self.write('SOUR' + str(channel) + ':POW' + str(port) + ' ' + str(power))
+        self.write('SOUR' + str(channel) + ':POW:SLOP ' + str(power_slope))
+        self.write('SOUR' + str(channel) + ':POW:SLOP:STAT ' + str(int(enable_power_slope)))
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+        return err
+
     
+    def enable_rf_power(self, enable_rf_power:bool):
+        if(enable_rf_power):
+            self.write('OUTP ON')
+        else:
+            self.write('OUTP OFF')
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+        return err
+
     def send_immidiate_trigger(self, channel:int = 1):
         self.write('INIT' + str(channel))
         err = self.error()
@@ -161,6 +186,7 @@ class AgilentN5231A(Instrument):
             return True
         else:
             return False
+        
     class DATA_TYPE(Enum):
         FDATA   =   "FDATA"
         RDATA   =   "RDATA"
@@ -168,6 +194,7 @@ class AgilentN5231A(Instrument):
         FMEM    =   "FMEM"
         SMEM    =   "SMEM"
         SDIV    =   "SDIV"
+        
     def read_data(self, data_type:DATA_TYPE = DATA_TYPE.FDATA, channel:int = 1):
         self.write('CALC'+ str(channel) +':DATA? ' + data_type.value)
         data = self.read()
