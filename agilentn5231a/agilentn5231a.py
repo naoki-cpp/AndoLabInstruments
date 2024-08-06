@@ -1,7 +1,3 @@
-from pymeasure.instruments import Instrument
-import inspect
-from enum import Enum
-
 class AgilentN5231A(Instrument):
     class SCATTERING_PARAMETERS(Enum):
         S11 = "S11"
@@ -26,7 +22,7 @@ class AgilentN5231A(Instrument):
         return
     
     def configure_standard_measurement(self, parameter:SCATTERING_PARAMETERS, channel:int = 1, measurement_name:str = 'CH1_S11_1'):
-        self.write('CALC' + str(channel) +':PAR:EXT ' + measurement_name + ',' + parameter.value)
+        self.write('CALC' + str(channel) +':PAR:EXT ' + measurement_name +',' +parameter.value)
 
         err = self.error()
         if(err.split(',')[0] != '+0'):
@@ -67,7 +63,7 @@ class AgilentN5231A(Instrument):
     
     class SWEEP_MODE(Enum):
         CHOPPED     =   "ALL"
-        Alternate   =   "NONE"
+        ALTERNATE   =   "NONE"
 
     def configure_sweep(self, sweep_type:SWEEP_TYPE, sweepmode:SWEEP_MODE, channel:int = 1):
         """
@@ -104,16 +100,16 @@ class AgilentN5231A(Instrument):
             if(enable_auto):
                 self.write('SENS' + str(channel) + ':SWE:DWEL:AUTO ON')
             else:
-                self.write('SENS' + str(channel) + '%:SWE:DWEL ' + str(sweep_or_dwell_time))
+                self.write('SENS' + str(channel) + ':SWE:DWEL ' + str(sweep_or_dwell_time))
 
         if(sweep_generation == self.SWEEP_GENERATION_MODE.ANALOG):
             self.write('SENS' + str(channel) + ':SWE:GEN ANALOG')
             if(enable_auto):
                 self.write('SENS' + str(channel) + ':SWE:TIME:AUTO ON')
             else:
-                self.write('SENS' + str(channel) + '%:SWE:TIME ' + str(sweep_or_dwell_time))
+                self.write('SENS' + str(channel) + ':SWE:TIME ' + str(sweep_or_dwell_time))
 
-        self.write('SENS' + str(channel) + 'SWE:POIN ' + str(sweeppoints))
+        self.write('SENS' + str(channel) + ':SWE:POIN ' + str(sweeppoints))
 
         err = self.error()
         if(err.split(',')[0] != '+0'):
@@ -134,13 +130,45 @@ class AgilentN5231A(Instrument):
         LOW     =   'LOW'
 
     def configure_trigger_sweep_signal(self, trigger_source:TRIGGER_SOURCE, trigger_scope:TRIGGER_SCOPE, trigger_level:TRIGGER_LEVEL, delay:float = 0):
-        self.write('TRIG:SOUR ' + trigger_source.value)
-        self.write('SCOP ' + trigger_scope.value)
-        self.write('LEV ' + trigger_level.value)
-        self.write('DEL ' + str(delay))
+        self.write('TRIG:SOUR ' + trigger_source.value + ';')
+        self.write('TRIG:SCOP ' + trigger_scope.value + ';')
+        self.write('TRIG:LEV ' + trigger_level.value + ';')
+        self.write('TRIG:DEL ' + str(delay) + ';')
         
         err = self.error()
         if(err.split(',')[0] != '+0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
         return err
+    
+    def send_immidiate_trigger(self, channel:int = 1):
+        self.write('INIT' + str(channel))
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+        return err
+    
+    def query_sweep_complete(self):
+        self.write('STAT:OPER:DEV?')
+        register = self.read()
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+        if (int(register) >> 4) & 1 == 0:
+            return True
+        else:
+            return False
+    class DATA_TYPE(Enum):
+        FDATA   =   "FDATA"
+        RDATA   =   "RDATA"
+        SDATA   =   "SDATA"
+        FMEM    =   "FMEM"
+        SMEM    =   "SMEM"
+        SDIV    =   "SDIV"
+    def read_data(self, data_type:DATA_TYPE = DATA_TYPE.FDATA, channel:int = 1):
+        self.write('CALC'+ str(channel) +':DATA? ' + data_type.value)
+        data = self.read()
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
 
+        return data
