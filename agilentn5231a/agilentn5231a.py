@@ -1,6 +1,8 @@
 from pymeasure.instruments import Instrument
 import inspect
+import pandas as pd
 from enum import Enum
+
 class AgilentN5231A(Instrument):
     class SCATTERING_PARAMETERS(Enum):
         S11 = "S11"
@@ -23,29 +25,88 @@ class AgilentN5231A(Instrument):
     def reset(self):
         self.write('*RST')
         return
-    
-    def configure_standard_measurement(self, parameter:SCATTERING_PARAMETERS, channel:int = 1, measurement_name:str = 'CH1_S11_1'):
+
+### Measurement settings
+    def delete_all_measurement(self):
+        self.write('CALCulate:PARameter:DELete:ALL')
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
+
+    def create_new_measurement(self, parameter:SCATTERING_PARAMETERS, channel:int = 1, measurement_name:str = 'CH1_S11_1'):
         self.write('CALC' + str(channel) +':PAR:EXT ' + measurement_name +',' +parameter.value)
 
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
     
-    def select_measurement(self, channel:int = 1, measurement_name:str = 'CH1_S11_1'):
+    def select_measurement(self, channel:int, measurement_name:str):
         self.write('CALC' + str(channel) + ':PAR:SEL ' + measurement_name)
 
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
     
+    def create_new_trace(self, parameter:SCATTERING_PARAMETERS, window:int=1, trace:int=1, channel:int = 1, measurement_name:str = 'CH1_S11_1'):
+        self.create_new_measurement(parameter, channel, measurement_name)
+        self.write('DISPlay:WINDow' + str(window) + ':TRACe' + str(trace) + ':FEED ' + measurement_name)
+        self.select_measurement(channel, measurement_name)
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
+    class DISPLAY_FORMAT(Enum):
+        LINEAR              =   'MLINear'
+        LOG                 =   'MLOGarithmic'
+        PHASE               =   'PHASe'
+        UNWRAPPED_PHASE     =   'UPHase'
+        IMAGINARY           =   'IMAGinary'
+        REAL                =   'REAL'
+        POLAR               =   'POLar'
+        SMITH               =   'SMITh'
+        SMITH_ADMITTANCE    =   'SADMittance'
+        SWR                 =   'SWR'
+        GROUP_DELAY         =   'GDELay'
+        KELVIN              =   'KELVin'
+        FAHRENHEIT          =   'FAHRenheit'
+        CELSIUS             =   'CELSius'
+
+    def set_display_format(self, channel, format:DISPLAY_FORMAT):
+        '''
+        Sets the display format for the measurement.
+        '''
+        self.write('CALCulate' + str(channel) + ':FORMat ' + format.value)
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
+    
+    def set_average(self, channel:int, count:int, enable:bool):
+        self.write('SENSe' + str(channel) + ':AVERage:COUNt ' + str(count))
+        self.write('SENSe' + str(channel) + ':AVERage:STATe ' + str(int(enable)))
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
+
+### Microwave settings    
+    def set_bandwidth_resolution(self, channel, resolution):
+        '''
+        Sets the bandwidth of the digital IF filter to be used in the measurement.
+        '''
+        self.write('SENSe' + str(channel) + ':BANDwidth:RESolution ' + str(resolution))
+
+
+### Sweep settings
     def set_start_frequency(self, frequency, channel:int = 1):
         self.write('SENS' + str(channel) + ':FREQ:STAR ' + str(frequency))
         
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
     
     def set_stop_frequency(self, frequency, channel:int = 1):
@@ -53,7 +114,7 @@ class AgilentN5231A(Instrument):
 
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
     
     class SWEEP_TYPE(Enum):
@@ -81,7 +142,7 @@ class AgilentN5231A(Instrument):
         
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
     
     class SWEEP_GENERATION_MODE(Enum):
@@ -116,14 +177,14 @@ class AgilentN5231A(Instrument):
 
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
     
     class TRIGGER_SOURCE(Enum):
-        IMMIDIATE   =   'IMM'
-        EXTERNAL    =   'EXT'
-        MANUAL      =   'MAN'
-    
+        EXTERNAL    =   'EXTernal'
+        IMMEDIATE   =   'IMMediate'
+        MANUAL      =   'MANual'
+
     class TRIGGER_SCOPE(Enum):
         ALL     =   'ALL'
         CURRENT =   'CURR'
@@ -140,7 +201,7 @@ class AgilentN5231A(Instrument):
         
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
 
     def configure_power(self, port:int, power:float, enable_power_slope:bool = False, power_slope:float = 0, enable_auto_attenuation:bool = False, attenuation:float = 0, channel:int = 1):
@@ -154,7 +215,7 @@ class AgilentN5231A(Instrument):
         self.write('SOUR' + str(channel) + ':POW:SLOP:STAT ' + str(int(enable_power_slope)))
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
 
     
@@ -165,27 +226,56 @@ class AgilentN5231A(Instrument):
             self.write('OUTP OFF')
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
 
     def send_immidiate_trigger(self, channel:int = 1):
         self.write('INIT' + str(channel))
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return err
-    
+
     def query_sweep_complete(self):
         self.write('STAT:OPER:DEV?')
         register = self.read()
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         if (int(register) >> 4) & 1 == 1:
             return True
         else:
             return False
-        
+
+##### DATA settings #####
+    def get_data_catalog(self, channel):
+        '''
+        Returns the names and parameters of existing measurements for the specified channel.
+        '''
+        self.write('CALCulate' + str(channel) + ':PARameter:CATalog?')
+        catalog = self.read()[1:-2].split(',')
+        return catalog
+
+
+    class DATA_FORMAT(Enum):
+        REAL32  =   'REAL,32'
+        REAL64  =   'REAL,64'
+        ASCII   =   'ASCii,0'
+
+    def set_data_format(self, format:DATA_FORMAT):
+        '''
+        REAL,32 - (default value for REAL) Best for transferring large amounts of measurement data.
+
+        REAL,64 - Slower but has more significant digits than REAL,32. Use REAL,64 if you have a computer that doesn't support REAL,32.
+
+        ASCii,0 - The easiest to implement, but very slow. Use if small amounts of data to transfer.
+        '''
+        self.write('FORMat:DATA ' + format.value)
+        err = self.error()
+        if(err.split(',')[0] != '+0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
+
     class DATA_TYPE(Enum):
         FDATA   =   "FDATA"
         RDATA   =   "RDATA"
@@ -194,14 +284,26 @@ class AgilentN5231A(Instrument):
         SMEM    =   "SMEM"
         SDIV    =   "SDIV"
         
-    def read_data(self, data_type:DATA_TYPE = DATA_TYPE.FDATA, channel:int = 1):
+    def read_data(self, channel:int, data_type:DATA_TYPE):
         self.write('CALC'+ str(channel) +':DATA? ' + data_type.value)
         data = self.read()
         err = self.error()
         if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_code.co_name))
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
 
         return data
+    
+    def read_all_data(self, channel:int, data_format:DATA_FORMAT, data_type:DATA_TYPE):
+        catalog = self.get_data_catalog(channel)
+        measurement_names = catalog[0::2]
+        parameters = catalog[1::2]
+        df = pd.DataFrame()
+        for measurement_name, parameter in zip(measurement_names, parameters):
+            self.select_measurement(channel, measurement_name)
+            self.set_data_format(data_format)
+            rawdata = self.read_data(channel=channel, data_type=data_type).split(',')
+            df[measurement_name] = rawdata
+        return df
 
     def shutdown(self):
         self.enable_rf_power(False)
