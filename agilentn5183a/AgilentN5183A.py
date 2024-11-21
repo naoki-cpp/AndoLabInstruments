@@ -132,3 +132,33 @@ class AgilentN5183A:
         err = self.error()
         if(err.split(',')[0] != '+0'):print(err)
         return
+    def output_settings(self, enable_modulation:bool = True, enable_auto_blanking:bool = True, enable_blanking:bool = True):
+        if(enable_modulation):
+            self.instrument.write(':OUTP:MOD ON')
+        else:
+            self.instrument.write(':OUTP:MOD OFF')
+        
+        if(enable_auto_blanking):
+            self.instrument.write(':OUTP:BLAN:AUTO ON')
+        else:
+            self.instrument.write(':OUTP:BLAN:AUTO OFF')
+        
+        if(enable_blanking):
+            self.instrument.write(':OUTP:BLAN:STAT ON')
+        else:
+            self.instrument.write(':OUTP:BLAN:STAT OFF')
+
+        err = self.error()
+        if(err.split(',')[0] != '+0'):print(err)
+        return
+
+    def output(self, enable_output:bool):
+        if(enable_output):
+            self.instrument.write(':OUTP ON')
+        else:
+            self.instrument.write(':OUTP OFF')
+
+        err = self.error()
+        if(err.split(',')[0] != '+0'):print(err)
+
+        return
