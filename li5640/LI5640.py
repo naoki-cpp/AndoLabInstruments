@@ -1,20 +1,23 @@
+from pymeasure.instruments import Instrument
 import pyvisa as visa
 from enum import Enum
 
-class LI5640:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
-    
-    def __del__(self):
-        self.instrument.close()
+class LI5640(Instrument):
+    def __init__(self, adapter, name="LI5640", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
         return
     
     def initialize(self):
-        self.instrument.write('*RST')
+        self.write('*RST')
         return
+    def error(self):
+        self.write('EROR?')
+        return self.read()
     ################################################################
     ## input setings
     ################################################################
@@ -24,10 +27,10 @@ class LI5640:
 
     def coupling(self, read:bool, coupling:INPUT_COUPLING):
         if(read):
-            self.instrument.write('ICPL?')
-            return str.strip(self.instrument.read())
+            self.write('ICPL?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('ICPL ' + str(coupling.value))
+            self.write('ICPL ' + str(coupling.value))
             return
     
     class INPUT_GROUNDING(Enum):
@@ -36,10 +39,10 @@ class LI5640:
 
     def ground(self, read:bool, ground:INPUT_GROUNDING):
         if(read):
-            self.instrument.write('IGND?')
-            return str.strip(self.instrument.read())
+            self.write('IGND?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('IGND ' + str(ground.value))
+            self.write('IGND ' + str(ground.value))
             return
     
     class SIGNAL_INPUT(Enum):
@@ -50,58 +53,11 @@ class LI5640:
 
     def signal_input(self, read:bool, input:SIGNAL_INPUT):
         if(read):
-            self.instrument.write('ISRC?')
-            return str.strip(self.instrument.read())
+            self.write('ISRC?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('ISRC ' + str(input.value))
+            self.write('ISRC ' + str(input.value))
             return
-    ################################################################
-    ## reference settings
-    ################################################################
-    class REFERENCE_SOURCE(Enum):
-        REFIN               = 0
-        INTERNAL_OSCILLATOR = 1
-        SIGNAL              = 2
-
-    def set_reference_source(self, read:bool, reference:REFERENCE_SOURCE):
-        if(read):
-            self.instrument.write('RSRC?')
-            return str.strip(self.instrument.read())
-        else:
-            self.instrument.write('RSRC ' + str(reference.value))
-            return
-    class REFERENCE_EDGE(Enum):
-        SINE_POS    = 0
-        TTL_POS     = 1
-        TTL_NEG     = 2
-
-    def set_reference_edge(self, read:bool, edge:REFERENCE_EDGE):
-        if(read):
-            self.instrument.write('REDG?')
-            return str.strip(self.instrument.read())
-        else:
-            self.instrument.write('REDG ' + str(edge.value))
-            return
-    
-    class HARMONIC_NUMBER(Enum):
-        INTERNAL_F  = 0
-        INTERNAL_2F = 1
-        REFERENCE_F = 2
-        REFERENCE_2F= 3
-        SIGNAL_F    = 4
-        SIGNAL_2F   = 5
-        INTERNAL    = 6
-        REFERENCE   = 8
-        SIGNAL      = 9
-        
-    def set_harmonic_number(self, read:bool, number:HARMONIC_NUMBER):
-        if(read):
-            self.instrument.write('BRM?')
-            return str.strip(self.instrument.read())
-        else:
-            self.instrument.write('BRM ' + str(number.value))
-            return
-
     ################################################################
     ## filter settings
     ################################################################
@@ -115,25 +71,25 @@ class LI5640:
         _50Hz   = 0
         _60Hz   = 1
 
-    def line_filter(self, read:bool, linefilter:LINE_FILTER, linefreq:LINE_FREQ):
+    def line_filter(self, read:bool, linefilter:LINE_FILTER, linefreq:LINE_FREQ=LINE_FREQ._50Hz):
         if(read):
-            self.instrument.write('ILIN?')
-            return str.strip(self.instrument.read())
+            self.write('ILIN?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('ILIN ' + str(linefilter.value))
+            self.write('ILIN ' + str(linefilter.value))
             if(linefilter != self.LINE_FILTER.THROUGH):
-                self.instrument.write('IFREQ ' + str(linefreq.value))
+                self.write('IFREQ ' + str(linefreq.value))
             return
 
     def lowpass_filter(self, read:bool, enable:bool):
         if(read):
-            self.instrument.write('ITHR?')
-            return str.strip(self.instrument.read())
+            self.write('ITHR?')
+            return str.strip(self.read())
         else:
             if(enable):
-                self.instrument.write('ITHR ' + str(0))
+                self.write('ITHR ' + str(0))
             else:
-                self.instrument.write('ITHR ' + str(1))
+                self.write('ITHR ' + str(1))
             return
     ########################################################################
     ## dynamic reserve
@@ -145,10 +101,10 @@ class LI5640:
 
     def dynamic_reserve(self, read:bool, dreserve:DYNAMIC_RESERVE):
         if(read):
-            self.instrument.write('DRSV?')
-            return str.strip(self.instrument.read())
+            self.write('DRSV?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('DRSV ' + str(dreserve.value))
+            self.write('DRSV ' + str(dreserve.value))
             return
     ########################################################################
     ## sensityvity settings
@@ -184,10 +140,10 @@ class LI5640:
     
     def set_voltage_sensitivity(self, read:bool, sensitivity:VOLTAGE_SENSITIVITY):
         if(read):
-            self.instrument.write('VSEN?')
-            return str.strip(self.instrument.read())
+            self.write('VSEN?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('VSEN ' + str(sensitivity.value))
+            self.write('VSEN ' + str(sensitivity.value))
             return
 
     class CURRENT_SENSITIVITY(Enum):
@@ -220,10 +176,10 @@ class LI5640:
 
     def set_current_sensitivity(self, read:bool, sensitivity:CURRENT_SENSITIVITY):
         if(read):
-            self.instrument.write('ISEN?')
-            return str.strip(self.instrument.read())
+            self.write('ISEN?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('ISEN ' + str(sensitivity.value))
+            self.write('ISEN ' + str(sensitivity.value))
             return
     
     class TIME_CONSTANT(Enum):
@@ -251,27 +207,27 @@ class LI5640:
     ########################################################################
     ## time constant settings
     ########################################################################
-    def set_time_constant(self, read:bool, timeconstant):
+    def set_time_constant(self, read:bool, timeconstant:TIME_CONSTANT):
         if(read):
-            self.instrument.write('TCON')
-            return str.strip(self.instrument.read())
+            self.write('TCON')
+            return str.strip(self.read())
         else:
-            self.instrument.write('TCON ' + str(timeconstant.value))
+            self.write('TCON ' + str(timeconstant.value))
             return
     
     def execute_auto_time_constant(self):
-        self.instrument.write('ATIM')
+        self.write('ATIM')
         return
     
     def set_synchronous_filter(self, read:bool, enable:bool):
         if(read):
-            self.instrument.write('SYNC?')
-            return str.strip(self.instrument.read())
+            self.write('SYNC?')
+            return str.strip(self.read())
         else:
             if(enable):
-                self.instrument.write('SYNC ' + str(1))
+                self.write('SYNC ' + str(1))
             else:
-                self.instrument.write('SYNC ' + str(0))
+                self.write('SYNC ' + str(0))
             return
     
     class SLOPE(Enum):
@@ -282,11 +238,67 @@ class LI5640:
 
     def set_slope(self, read:bool, slope:SLOPE):
         if(read):
-            self.instrument.write('SLOP')
-            return str.strip(self.instrument.read())
+            self.write('SLOP')
+            return str.strip(self.read())
         else:
-            self.instrument.write('SLOP ' + str(slope.value))
+            self.write('SLOP ' + str(slope.value))
             return
+    
+    ################################################################
+    ## reference settings
+    ################################################################
+    class REFERENCE_SOURCE(Enum):
+        REFIN               = 0
+        INTERNAL_OSCILLATOR = 1
+        SIGNAL              = 2
+
+    def set_reference_source(self, read:bool, reference:REFERENCE_SOURCE):
+        if(read):
+            self.write('RSRC?')
+            return str.strip(self.read())
+        else:
+            self.write('RSRC ' + str(reference.value))
+            return
+    class REFERENCE_EDGE(Enum):
+        SINE_POS    = 0
+        TTL_POS     = 1
+        TTL_NEG     = 2
+
+    def set_reference_edge(self, read:bool, edge:REFERENCE_EDGE):
+        if(read):
+            self.write('REDG?')
+            return str.strip(self.read())
+        else:
+            self.write('REDG ' + str(edge.value))
+            return
+    
+    class BASIC_FUNCTION_REF_MODE(Enum):
+        INTERNAL_F  = 0
+        INTERNAL_2F = 1
+        REFERENCE_F = 2
+        REFERENCE_2F= 3
+        SIGNAL_F    = 4
+        SIGNAL_2F   = 5
+        INTERNAL    = 6
+        REFERENCE   = 8
+        SIGNAL      = 9
+        
+    def set_basic_function_ref_mode(self, read:bool, brm:BASIC_FUNCTION_REF_MODE):
+        if(read):
+            self.write('BRM?')
+            return str.strip(self.read())
+        else:
+            self.write('BRM ' + str(brm.value))
+            return
+    
+    def set_harmonic_order(self, read:bool, number:int):
+        if(read):
+            self.write('HARM?')
+            return str.strip(self.read())
+        else:
+            self.write('HARM ' + str(number))
+            return
+
     ################################################################
     ## data settings
     ################################################################
@@ -298,10 +310,10 @@ class LI5640:
 
     def set_data1(self, read:bool, data1type:DATA1TYPE):
         if(read):
-            self.instrument.write('DDEF? 1')
-            return str.strip(self.instrument.read())
+            self.write('DDEF? 1')
+            return str.strip(self.read())
         else:
-            self.instrument.write('DDEF 1, ' + str(data1type.value))
+            self.write('DDEF 1, ' + str(data1type.value))
             return
 
     class DATA2TYPE(Enum):
@@ -312,10 +324,10 @@ class LI5640:
 
     def set_data2(self, read:bool, data2type:DATA2TYPE):
         if(read):
-            self.instrument.write('DDEF? 2')
-            return str.strip(self.instrument.read())
+            self.write('DDEF? 2')
+            return str.strip(self.read())
         else:
-            self.instrument.write('DDEF 2, ' + str(data2type.value))
+            self.write('DDEF 2, ' + str(data2type.value))
             return
 
     class OUTPUT_TYPE(Enum):
@@ -328,8 +340,8 @@ class LI5640:
 
     def set_output_type(self, read:bool, *outputtype:OUTPUT_TYPE):
         if(read):
-            self.instrument.write('OTYP?')
-            return str.strip(self.instrument.read())
+            self.write('OTYP?')
+            return str.strip(self.read())
         else:
             outputstrings = ''
             for i, t in enumerate(outputtype):
@@ -337,10 +349,10 @@ class LI5640:
                     outputstrings += str(t.value)
                 else:
                     outputstrings += ',' + str(t.value)
-            self.instrument.write('OTYP ' + outputstrings)
+            self.write('OTYP ' + outputstrings)
             return
     
     def read_data(self):
-        self.instrument.write('DOUT?')
-        output_data = [float(s) for s in str.strip(self.instrument.read()).split(',')]
+        self.write('DOUT?')
+        output_data = [float(s) for s in str.strip(self.read()).split(',')]
         return output_data
