@@ -1,16 +1,10 @@
 from pymeasure.instruments import Instrument
-import inspect
 import pandas as pd
-from enum import Enum
+import inspect
+import enum
 
-class AgilentN5231A(Instrument):
-    class SCATTERING_PARAMETERS(Enum):
-        S11 = "S11"
-        S12 = "S12"
-        S21 = "S21"
-        S22 = "S22"
-
-    def __init__(self, adapter, name="Agilent N5231A", **kwargs):
+class ZNB20(Instrument):
+    def __init__(self, adapter, name="ZNB20", **kwargs):
         super().__init__(
             adapter,
             name,
@@ -22,288 +16,209 @@ class AgilentN5231A(Instrument):
         self.write(':SYST:ERR?')
         return self.read()
     
-    def reset(self):
-        self.write('*RST')
+    def initialize(self):
+        self.write('*CLS;*RST;:INITiate:CONTinuous:ALL OFF')
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
-
-### Measurement settings
-    def delete_all_measurement(self):
+    
+    def set_update_display(self, flag:bool):
+        if(flag):
+            self.write('SYST:DISP:UPD ON')
+        else:
+            self.write('SYST:DISP:UPD OFF')
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+##### Trace Settings #####
+    def delete_all_traces(self):
         self.write('CALCulate:PARameter:DELete:ALL')
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
-
-    def create_new_measurement(self, parameter:SCATTERING_PARAMETERS, channel:int = 1, measurement_name:str = 'CH1_S11_1'):
-        self.write('CALC' + str(channel) +':PAR:EXT ' + measurement_name +',' +parameter.value)
-
-        err = self.error()
-        if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return
     
-    def select_measurement(self, channel:int, measurement_name:str):
-        self.write('CALC' + str(channel) + ':PAR:SEL ' + measurement_name)
+    class TraceFormatType(enum.Enum):
+        MAGNITUDE_LINEAR = "MLINear"
+        MAGNITUDE_dB = "MLOGarithmic"
+        PHASE = "PHASe"
+        UNRAPPED_PHASE = "UPHase"
+        POLAR = "POLar"
+        SMITH = "SMITh"
+        INVERTED_SMITH = "ISMith"
+        GROUP_DELAY = "GDELay"
+        REAL = "REAL"
+        IMAGINARY = "IMAGinary"
+        STANDING_WAVE_RATIO = "SWR"
+        COMPLEX = "COMPlex"
+        MAGNITUDE = "MAGNitude"
 
+
+    def set_trace_format(self, channel, format:TraceFormatType):
+        self.write('CALC' + str(channel) + ':FORM ' + format.value)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return
     
-    def create_new_trace(self, parameter:SCATTERING_PARAMETERS, window:int=1, trace:int=1, channel:int = 1, measurement_name:str = 'CH1_S11_1'):
-        self.create_new_measurement(parameter, channel, measurement_name)
-        self.write('DISPlay:WINDow' + str(window) + ':TRACe' + str(trace) + ':FEED ' + measurement_name)
-        self.select_measurement(channel, measurement_name)
+    def set_trace_aperture_points(self, channel, aperture:int):
+        self.write('CALC' + str(channel) + ':GDAP:SCO ' + str(aperture))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
-    class DISPLAY_FORMAT(Enum):
-        LINEAR              =   'MLINear'
-        LOG                 =   'MLOGarithmic'
-        PHASE               =   'PHASe'
-        UNWRAPPED_PHASE     =   'UPHase'
-        IMAGINARY           =   'IMAGinary'
-        REAL                =   'REAL'
-        POLAR               =   'POLar'
-        SMITH               =   'SMITh'
-        SMITH_ADMITTANCE    =   'SADMittance'
-        SWR                 =   'SWR'
-        GROUP_DELAY         =   'GDELay'
-        KELVIN              =   'KELVin'
-        FAHRENHEIT          =   'FAHRenheit'
-        CELSIUS             =   'CELSius'
-
-    def set_display_format(self, channel, format:DISPLAY_FORMAT):
-        '''
-        Sets the display format for the measurement.
-        '''
-        self.write('CALCulate' + str(channel) + ':FORMat ' + format.value)
-        err = self.error()
-        if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return
     
-    def set_average(self, channel:int, count:int, enable:bool):
-        self.write('SENSe' + str(channel) + ':AVERage:COUNt ' + str(count))
-        self.write('SENSe' + str(channel) + ':AVERage:STATe ' + str(int(enable)))
+    def set_trace_format_and_aperture(self, channel, format:TraceFormatType, aperture:int):
+        self.set_trace_format(channel, format)
+        self.set_trace_aperture_points(channel, aperture)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
-
-### Microwave settings    
-    def set_bandwidth_resolution(self, channel, resolution):
-        '''
-        Sets the bandwidth of the digital IF filter to be used in the measurement.
-        '''
-        self.write('SENSe' + str(channel) + ':BANDwidth:RESolution ' + str(resolution))
-
-
-### Sweep settings
-    def set_start_frequency(self, frequency, channel:int = 1):
-        self.write('SENS' + str(channel) + ':FREQ:STAR ' + str(frequency))
-        
+        return
+    
+    def add_new_trace(self, channel, tracename, out_port, in_port):
+        self.write('CALC' + str(channel) + ':PAR:SDEF ' + "'" + tracename + "'" + ", 'S" + str(int(out_port)) + str(int(in_port)) + "'")
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return
     
-    def set_stop_frequency(self, frequency, channel:int = 1):
-        self.write('SENS' + str(channel) + ':FREQ:STOP ' + str(frequency))
-
+    def set_existing_trace(self, channel, tracename, out_port, in_port):
+        self.write('CALC' + str(channel) + ':PAR:MEAS ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return
     
-    class SWEEP_TYPE(Enum):
-        LIN     =   "LIN"
-        LOG     =   "LOG"
-        POW     =   "POW"
-        CW      =   "CW"
-        SEGM    =   "SEGM"
-        PHAS    =   "PHAS"
-    
-    class SWEEP_MODE(Enum):
-        CHOPPED     =   "ALL"
-        ALTERNATE   =   "NONE"
-
-    def configure_sweep(self, sweep_type:SWEEP_TYPE, sweepmode:SWEEP_MODE, channel:int = 1):
-        """
-        ALL - Sweep mode set to Chopped - reflection and transmission measured on
-        the same sweep.
-        ---
-        NONE - Sweep mode set to Alternate - reflection and transmission measured
-        on separate sweeps. Increases sweep time
-        """
-        self.write('SENS' + str(channel) + ':SWE:TYPE ' + sweep_type.value)
-        self.write('SENS' + str(channel) + ':COUP ' + sweepmode.value)
-        
+    def get_trace_catalog(self, channel):
+        self.write('CALC' + str(channel) + ':PAR:CAT?')
+        catalog = self.read().replace("'","").strip().split(',')
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return catalog
     
-    class SWEEP_GENERATION_MODE(Enum):
-        STEP = 0
-        ANALOG = 1
-
-    def configure_sweep_generation(self, sweep_generation:SWEEP_GENERATION_MODE, enable_auto:bool, sweep_or_dwell_time:float, sweeppoints:int, channel:int = 1):
-        """
-        STEPped - source frequency is CONSTANT during measurement of eah
-        displayed point. More accurate than ANALog. Dwell time can be set in this
-        mode.
-        ---
-        ANALog - source frequency is continuously RAMPING during measurement
-        of each displayed point. Faster than STEPped. Sweep time (not dwell time) can
-        be set in this mode.
-        """
-        if(sweep_generation == self.SWEEP_GENERATION_MODE.STEP):
-            self.write('SENS' + str(channel) + ':SWE:GEN STEP')
-            if(enable_auto):
-                self.write('SENS' + str(channel) + ':SWE:DWEL:AUTO ON')
-            else:
-                self.write('SENS' + str(channel) + ':SWE:DWEL ' + str(sweep_or_dwell_time))
-
-        if(sweep_generation == self.SWEEP_GENERATION_MODE.ANALOG):
-            self.write('SENS' + str(channel) + ':SWE:GEN ANALOG')
-            if(enable_auto):
-                self.write('SENS' + str(channel) + ':SWE:TIME:AUTO ON')
-            else:
-                self.write('SENS' + str(channel) + ':SWE:TIME ' + str(sweep_or_dwell_time))
-
-        self.write('SENS' + str(channel) + ':SWE:POIN ' + str(sweeppoints))
-
-        err = self.error()
-        if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
-    
-    class TRIGGER_SOURCE(Enum):
-        EXTERNAL    =   'EXTernal'
-        IMMEDIATE   =   'IMMediate'
-        MANUAL      =   'MANual'
-
-    class TRIGGER_SCOPE(Enum):
-        ALL     =   'ALL'
-        CURRENT =   'CURR'
-    
-    class TRIGGER_LEVEL(Enum):
-        HIGH    =   'HIGH'
-        LOW     =   'LOW'
-
-    def configure_trigger_sweep_signal(self, trigger_source:TRIGGER_SOURCE, trigger_scope:TRIGGER_SCOPE, trigger_level:TRIGGER_LEVEL, delay:float = 0):
-        self.write('TRIG:SOUR ' + trigger_source.value + ';')
-        self.write('TRIG:SCOP ' + trigger_scope.value + ';')
-        self.write('TRIG:LEV ' + trigger_level.value + ';')
-        self.write('TRIG:DEL ' + str(delay) + ';')
-        
-        err = self.error()
-        if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
-
-    def configure_power(self, port:int, power:float, enable_power_slope:bool = False, power_slope:float = 0, enable_auto_attenuation:bool = False, attenuation:float = 0, channel:int = 1):
-        """
-        power: dBm
-        """
-        self.write('SOUR' + str(channel) + ':POW' + str(port) + ':ATT ' + str(attenuation))
-        self.write('SOUR' + str(channel) + ':POW' + str(port) + ':ATT:AUTO ' + str(int(enable_auto_attenuation)))
-        self.write('SOUR' + str(channel) + ':POW' + str(port) + ' ' + str(power))
-        self.write('SOUR' + str(channel) + ':POW:SLOP ' + str(power_slope))
-        self.write('SOUR' + str(channel) + ':POW:SLOP:STAT ' + str(int(enable_power_slope)))
-        err = self.error()
-        if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
-
-    
-    def enable_rf_power(self, enable_rf_power:bool):
-        if(enable_rf_power):
-            self.write('OUTP ON')
+    def set_trace(self, channel, tracename, out_port, in_port):
+        tracelist = self.get_trace_catalog(channel)[::2]
+        if(any(s.startswith(tracename) for s in tracelist)):
+            self.set_existing_trace(channel, tracename, out_port, in_port)
         else:
-            self.write('OUTP OFF')
+            self.add_new_trace(channel, tracename, out_port, in_port)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return
+    
+    def select_trace(self, channel, tracename):
+        self.write('CALCulate' + str(channel) + ':PARameter:SELect ' + tracename)
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+##### Microewave Settings
+    def set_start_frequency(self, channel:int, start:float):
+        self.write('SENS' + str(channel) + ':FREQ:STAR ' + str(start))
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
 
-    def send_immidiate_trigger(self, channel:int = 1):
-        self.write('INIT' + str(channel))
+    def set_stop_frequency(self, channel:int, stop:float):
+        self.write('SENS' + str(channel) + ':FREQ:STOP ' + str(stop))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
+        return
 
-    def query_sweep_complete(self):
-        self.write('STAT:OPER:DEV?')
-        register = self.read()
+    def set_frequency(self, channel, start, stop):
+        self.set_start_frequency(channel, start)
+        self.set_stop_frequency(channel, stop)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        if (int(register) >> 4) & 1 == 1:
-            return True
+        return
+    
+    def set_power(self, channel, power):
+        self.write('SOUR' + str(channel) + ':POW ' + str(power))
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+    def set_bandwidth(self, channel, bandwidth):
+        self.write('SENS' + str(channel) + ':BAND ' + str(bandwidth))
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+    def set_sweep_points(self, channel, points):
+        self.write('SENS' + str(channel) + ':SWE:POIN ' + str(points))
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+
+    def set_sweep_time(self, channel, time):
+        self.write('SENS' + str(channel) + ':SWE:TIME ' + str(time))
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+    def set_continuous_sweep(self, channel, flag:bool):
+        if(flag):
+            self.write('INIT' + str(channel) + ':CONT ON')
         else:
-            return False
+            self.write('INIT' + str(channel) + ':CONT OFF')
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+    def set_sweep_count_for_all_channel(self, count):
+        self.write('SENS:SWE:COUN:ALL ' + str(count))
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
 
+    def initiate_all(self):
+        self.write('INIT:ALL')
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
 ##### DATA settings #####
     def get_data_catalog(self, channel):
-        '''
-        Returns the names and parameters of existing measurements for the specified channel.
-        '''
-        self.write('CALCulate' + str(channel) + ':PARameter:CATalog?')
-        catalog = self.read()[1:-2].split(',')
+        self.write('CALCulate' + str(channel) + ':DATA:CALL:CATalog?')
+        catalog = self.read()
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return catalog
-
-
-    class DATA_FORMAT(Enum):
-        REAL32  =   'REAL,32'
-        REAL64  =   'REAL,64'
-        ASCII   =   'ASCii,0'
-
-    def set_data_format(self, format:DATA_FORMAT):
-        '''
-        REAL,32 - (default value for REAL) Best for transferring large amounts of measurement data.
-
-        REAL,64 - Slower but has more significant digits than REAL,32. Use REAL,64 if you have a computer that doesn't support REAL,32.
-
-        ASCii,0 - The easiest to implement, but very slow. Use if small amounts of data to transfer.
-        '''
-        self.write('FORMat:DATA ' + format.value)
+    
+    def get_data(self, channel):
+        self.write('CALC' + str(channel) + ':DATA:CALL? SDAT')
+        data = self.read().strip().split(',')
+        data = [float(s) for s in data]
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return err
-
-    class DATA_TYPE(Enum):
-        FDATA   =   "FDATA"
-        RDATA   =   "RDATA"
-        SDATA   =   "SDATA"
-        FMEM    =   "FMEM"
-        SMEM    =   "SMEM"
-        SDIV    =   "SDIV"
-        
-    def read_data(self, channel:int, data_type:DATA_TYPE):
-        self.write('CALC'+ str(channel) +':DATA? ' + data_type.value)
-        data = self.read()
-        err = self.error()
-        if(err.split(',')[0] != '+0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-
         return data
     
-    def read_all_data(self, channel:int, data_format:DATA_FORMAT, data_type:DATA_TYPE):
-        catalog = self.get_data_catalog(channel)
-        measurement_names = catalog[0::2]
+    def get_data_all(self, channel):
+        catalog = self.get_trace_catalog(channel)
+        trace_names = catalog[0::2]
         parameters = catalog[1::2]
         df = pd.DataFrame()
-        for measurement_name, parameter in zip(measurement_names, parameters):
-            self.select_measurement(channel, measurement_name)
-            self.set_data_format(data_format)
-            rawdata = self.read_data(channel=channel, data_type=data_type).split(',')
-            df[measurement_name] = rawdata
+        for trace_name, parameter in zip(trace_names, parameters):
+            self.write('CALC:DATA:TRACe? ' + "'" + trace_name + "'" + ', SDAT')
+            rawdata = self.read().strip().split(',')
+            rawdata = [float(s) for s in rawdata]
+            df[trace_name] = rawdata
         return df
-
-    def shutdown(self):
-        self.enable_rf_power(False)
