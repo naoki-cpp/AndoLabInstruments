@@ -10,10 +10,6 @@ class ZNB20(Instrument):
             **kwargs
         )
     
-    def __del__(self):
-        self.instrument.close()
-        return
-    
     def initialize(self):
         self.write('*CLS;*RST;:INITiate:CONTinuous:ALL OFF')
         return
