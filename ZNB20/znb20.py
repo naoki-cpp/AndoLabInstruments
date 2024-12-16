@@ -18,7 +18,7 @@ class ZNB20(Instrument):
     def initialize(self):
         self.write('*CLS;*RST;:INITiate:CONTinuous:ALL OFF')
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
@@ -28,7 +28,7 @@ class ZNB20(Instrument):
         else:
             self.write('SYST:DISP:UPD OFF')
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
@@ -51,14 +51,14 @@ class ZNB20(Instrument):
     def set_trace_format(self, channel, format:TraceFormatType):
         self.write('CALC' + str(channel) + ':FORM ' + format.value)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def set_trace_aperture_points(self, channel, aperture:int):
         self.write('CALC' + str(channel) + ':GDAP:SCO ' + str(aperture))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
@@ -66,21 +66,21 @@ class ZNB20(Instrument):
         self.set_trace_format(channel, format)
         self.set_trace_aperture_points(channel, aperture)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def set_start_frequency(self, channel:int, start:float):
         self.write('SENS' + str(channel) + ':FREQ:STAR ' + str(start))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
 
     def set_stop_frequency(self, channel:int, stop:float):
         self.write('SENS' + str(channel) + ':FREQ:STOP ' + str(stop))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
 
@@ -88,7 +88,7 @@ class ZNB20(Instrument):
         self.set_start_frequency(channel, start)
         self.set_stop_frequency(channel, stop)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
@@ -96,21 +96,21 @@ class ZNB20(Instrument):
         self.write('CALC' + str(channel) + ':PAR:SDEF ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
         
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def set_existing_trace(self, channel, tracename, out_port, in_port):
         self.write('CALC' + str(channel) + ':PAR:MEAS ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def get_trace_catalog(self, channel):
         self.write('CALC' + str(channel) + ':PAR:CAT?')        
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return self.read().replace("'","").strip()
     
@@ -121,35 +121,35 @@ class ZNB20(Instrument):
         else:
             self.add_new_trace(channel, tracename, out_port, in_port)
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def set_power(self, channel, power):
         self.write('SOUR' + str(channel) + ':POW ' + str(power))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def set_bandwidth(self, channel, bandwidth):
         self.write('SENS' + str(channel) + ':BAND ' + str(bandwidth))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def set_sweep_points(self, channel, points):
         self.write('SENS' + str(channel) + ':SWE:POIN ' + str(points))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
 
     def set_sweep_time(self, channel, time):
         self.write('SENS' + str(channel) + ':SWE:TIME ' + str(time))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
@@ -159,21 +159,21 @@ class ZNB20(Instrument):
         else:
             self.write('INIT' + str(channel) + ':CONT OFF')
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def set_sweep_count_for_all_channel(self, count):
         self.write('SENS:SWE:COUN:ALL ' + str(count))
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
 
     def initiate_all(self):
         self.write('INIT:ALL')
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
@@ -182,7 +182,7 @@ class ZNB20(Instrument):
         self.write('CALCulate' + str(channel) + ':DATA:CALL:CATalog?')
         catalog = self.read()
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return catalog
 
@@ -191,27 +191,27 @@ class ZNB20(Instrument):
         data = self.read().strip().split(',')
         data = [float(s) for s in data]        
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return data
 
     def set_continuous_wave(self, channel, frequency):
         self.write('SOUR' + str(channel) + ':FREQ '+ str(frequency) + 'GHz')
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def output_on(self):
         self.write("SOUR:POW:STAR")
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
     def output_off(self):
         self.write("SOUR:POW:STOP")
         err = self.error()
-        if(err.split(',')[0] != '+0'):
+        if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
