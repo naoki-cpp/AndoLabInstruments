@@ -1,4 +1,5 @@
 from pymeasure.instruments import Instrument
+import pandas as pd
 import inspect
 import enum
 
@@ -27,6 +28,14 @@ class ZNB20(Instrument):
             self.write('SYST:DISP:UPD ON')
         else:
             self.write('SYST:DISP:UPD OFF')
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+##### Trace Settings #####
+    def delete_all_traces(self):
+        self.write('CALCulate:PARameter:DELete:ALL')
         err = self.error()
         if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
@@ -62,7 +71,7 @@ class ZNB20(Instrument):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
-    def configure_trace_format(self, channel, format:TraceFormatType, aperture:int):
+    def set_trace_format_and_aperture(self, channel, format:TraceFormatType, aperture:int):
         self.set_trace_format(channel, format)
         self.set_trace_aperture_points(channel, aperture)
         err = self.error()
@@ -70,6 +79,46 @@ class ZNB20(Instrument):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return
     
+    def add_new_trace(self, channel, tracename, out_port, in_port):
+        self.write('CALC' + str(channel) + ':PAR:SDEF ' + "'" + tracename + "'" + ", 'S" + str(int(out_port)) + str(int(in_port)) + "'")
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+    def set_existing_trace(self, channel, tracename, out_port, in_port):
+        self.write('CALC' + str(channel) + ':PAR:MEAS ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+    def get_trace_catalog(self, channel):
+        self.write('CALC' + str(channel) + ':PAR:CAT?')
+        catalog = self.read().replace("'","").strip().split(',')
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return catalog
+    
+    def set_trace(self, channel, tracename, out_port, in_port):
+        tracelist = self.get_trace_catalog(channel)[::2]
+        if(any(s.startswith(tracename) for s in tracelist)):
+            self.set_existing_trace(channel, tracename, out_port, in_port)
+        else:
+            self.add_new_trace(channel, tracename, out_port, in_port)
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+    
+    def select_trace(self, channel, tracename):
+        self.write('CALCulate' + str(channel) + ':PARameter:SELect ' + tracename)
+        err = self.error()
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return
+##### Microewave Settings
     def set_start_frequency(self, channel:int, start:float):
         self.write('SENS' + str(channel) + ':FREQ:STAR ' + str(start))
         err = self.error()
@@ -87,39 +136,6 @@ class ZNB20(Instrument):
     def set_frequency(self, channel, start, stop):
         self.set_start_frequency(channel, start)
         self.set_stop_frequency(channel, stop)
-        err = self.error()
-        if(err.split(',')[0] != '0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return
-    
-    def add_new_trace(self, channel, tracename, out_port, in_port):
-        self.write('CALC' + str(channel) + ':PAR:SDEF ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
-        
-        err = self.error()
-        if(err.split(',')[0] != '0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return
-    
-    def set_existing_trace(self, channel, tracename, out_port, in_port):
-        self.write('CALC' + str(channel) + ':PAR:MEAS ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
-        err = self.error()
-        if(err.split(',')[0] != '0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return
-    
-    def get_trace_catalog(self, channel):
-        self.write('CALC' + str(channel) + ':PAR:CAT?')        
-        err = self.error()
-        if(err.split(',')[0] != '0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return self.read().replace("'","").strip()
-    
-    def set_trace(self, channel, tracename, out_port, in_port):
-        tracelist = self.get_trace_catalog(channel).split(',')[::2]
-        if(any(s.startswith(tracename) for s in tracelist)):
-            self.set_existing_trace(channel, tracename, out_port, in_port)
-        else:
-            self.add_new_trace(channel, tracename, out_port, in_port)
         err = self.error()
         if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
@@ -185,33 +201,24 @@ class ZNB20(Instrument):
         if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return catalog
-
-    def get_data_all(self, channel):
+    
+    def get_data(self, channel):
         self.write('CALC' + str(channel) + ':DATA:CALL? SDAT')
         data = self.read().strip().split(',')
-        data = [float(s) for s in data]        
+        data = [float(s) for s in data]
         err = self.error()
         if(err.split(',')[0] != '0'):
             raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
         return data
-
-    def set_continuous_wave(self, channel, frequency):
-        self.write('SOUR' + str(channel) + ':FREQ '+ str(frequency) + 'GHz')
-        err = self.error()
-        if(err.split(',')[0] != '0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return
     
-    def output_on(self):
-        self.write("SOUR:POW:STAR")
-        err = self.error()
-        if(err.split(',')[0] != '0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return
-    
-    def output_off(self):
-        self.write("SOUR:POW:STOP")
-        err = self.error()
-        if(err.split(',')[0] != '0'):
-            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
-        return
+    def get_data_all(self, channel):
+        catalog = self.get_trace_catalog(channel)
+        trace_names = catalog[0::2]
+        parameters = catalog[1::2]
+        df = pd.DataFrame()
+        for trace_name, parameter in zip(trace_names, parameters):
+            self.write('CALC:DATA:TRACe? ' + "'" + trace_name + "'" + ', SDAT')
+            rawdata = self.read().strip().split(',')
+            rawdata = [float(s) for s in rawdata]
+            df[trace_name] = rawdata
+        return df
