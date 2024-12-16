@@ -1,27 +1,31 @@
+from pymeasure.instruments import Instrument
+import enum
 
-class ZNB20:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
+class ZNB20(Instrument):
+    def __init__(self, adapter, name="ZNB20", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
     
     def __del__(self):
         self.instrument.close()
         return
     
     def initialize(self):
-        self.instrument.write('*CLS;*RST;:INITiate:CONTinuous:ALL OFF')
+        self.write('*CLS;*RST;:INITiate:CONTinuous:ALL OFF')
         return
     
     def set_update_display(self, flag:bool):
         if(flag):
-            self.instrument.write('SYST:DISP:UPD ON')
+            self.write('SYST:DISP:UPD ON')
         else:
-            self.instrument.write('SYST:DISP:UPD OFF')
+            self.write('SYST:DISP:UPD OFF')
         return
     
-    class TraceFormatType(Enum):
+    class TraceFormatType(enum.Enum):
         MAGNITUDE_LINEAR = "MLINear"
         MAGNITUDE_dB = "MLOGarithmic"
         PHASE = "PHASe"
@@ -38,11 +42,11 @@ class ZNB20:
 
 
     def set_trace_format(self, channel, format:TraceFormatType):
-        self.instrument.write('CALC' + str(channel) + ':FORM ' + format.value)
+        self.write('CALC' + str(channel) + ':FORM ' + format.value)
         return
     
     def set_trace_aperture_points(self, channel, aperture:int):
-        self.instrument.write('CALC' + str(channel) + ':GDAP:SCO ' + str(aperture))
+        self.write('CALC' + str(channel) + ':GDAP:SCO ' + str(aperture))
         return
     
     def configure_trace_format(self, channel, format:TraceFormatType, aperture:int):
@@ -51,11 +55,11 @@ class ZNB20:
         return
     
     def set_start_frequency(self, channel:int, start:float):
-        self.instrument.write('SENS' + str(channel) + ':FREQ:STAR ' + str(start))
+        self.write('SENS' + str(channel) + ':FREQ:STAR ' + str(start))
         return
 
     def set_stop_frequency(self, channel:int, stop:float):
-        self.instrument.write('SENS' + str(channel) + ':FREQ:STOP ' + str(stop))
+        self.write('SENS' + str(channel) + ':FREQ:STOP ' + str(stop))
         return
 
     def set_frequency(self, channel, start, stop):
@@ -64,16 +68,16 @@ class ZNB20:
         return
     
     def add_new_trace(self, channel, tracename, out_port, in_port):
-        self.instrument.write('CALC' + str(channel) + ':PAR:SDEF ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
+        self.write('CALC' + str(channel) + ':PAR:SDEF ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
         return
     
     def set_existing_trace(self, channel, tracename, out_port, in_port):
-        self.instrument.write('CALC' + str(channel) + ':PAR:MEAS ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
+        self.write('CALC' + str(channel) + ':PAR:MEAS ' + "'" + tracename + "'" + ", 'S" + str(out_port) + str(in_port) + "'")
         return
     
     def get_trace_catalog(self, channel):
-        self.instrument.write('CALC' + str(channel) + ':PAR:CAT?')
-        return self.instrument.read().replace("'","").strip()
+        self.write('CALC' + str(channel) + ':PAR:CAT?')
+        return self.read().replace("'","").strip()
     
     def set_trace(self, channel, tracename, out_port, in_port):
         tracelist = self.get_trace_catalog(channel).split(',')[::2]
@@ -84,39 +88,50 @@ class ZNB20:
         return
     
     def set_power(self, channel, power):
-        self.instrument.write('SOUR' + str(channel) + ':POW ' + str(power))
+        self.write('SOUR' + str(channel) + ':POW ' + str(power))
         return
     
     def set_bandwidth(self, channel, bandwidth):
-        self.instrument.write('SENS' + str(channel) + ':BAND ' + str(bandwidth))
+        self.write('SENS' + str(channel) + ':BAND ' + str(bandwidth))
         return
     
     def set_sweep_points(self, channel, points):
-        self.instrument.write('SENS' + str(channel) + ':SWE:POIN ' + str(points))
+        self.write('SENS' + str(channel) + ':SWE:POIN ' + str(points))
         return
 
     def set_sweep_time(self, channel, time):
-        self.instrument.write('SENS' + str(channel) + ':SWE:TIME ' + str(time))
+        self.write('SENS' + str(channel) + ':SWE:TIME ' + str(time))
         return
     
     def set_continuous_sweep(self, channel, flag:bool):
         if(flag):
-            self.instrument.write('INIT' + str(channel) + ':CONT ON')
+            self.write('INIT' + str(channel) + ':CONT ON')
         else:
-            self.instrument.write('INIT' + str(channel) + ':CONT OFF')
+            self.write('INIT' + str(channel) + ':CONT OFF')
         return
     
     def set_sweep_count_for_all_channel(self, count):
-        self.instrument.write('SENS:SWE:COUN:ALL ' + str(count))
+        self.write('SENS:SWE:COUN:ALL ' + str(count))
         return
 
     def initiate_all(self):
-        self.instrument.write('INIT:ALL')
+        self.write('INIT:ALL')
         return
     
     def get_data_all(self, channel):
-        self.instrument.write('CALC' + str(channel) + ':DATA:CALL? SDAT')
-        data = self.instrument.read().strip().split(',')
+        self.write('CALC' + str(channel) + ':DATA:CALL? SDAT')
+        data = self.read().strip().split(',')
         data = [float(s) for s in data]
         return data
+
+    def set_continuous_wave(self, channel, frequency):
+        self.write('SOUR' + str(channel) + ':FREQ '+ str(frequency) + 'GHz')
+        return
     
+    def output_on(self):
+        self.write("SOUR:POW:STAR")
+        return
+    
+    def output_off(self):
+        self.write("SOUR:POW:STOP")
+        return
