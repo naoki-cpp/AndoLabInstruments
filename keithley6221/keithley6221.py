@@ -1,18 +1,16 @@
-import pyvisa as visa
+from pymeasure.instruments import Instrument
 
-class Keithley6221:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
-    
-    def __del__(self):
-        self.instrument.close()
-        return
+class Keithley6221(Instrument):
+    def __init__(self, adapter, name="Keithley6221", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
     
     def abort(self):
-        self.instrument.write(':SOUR:WAVE:ABOR')
+        self.write(':SOUR:WAVE:ABOR')
         return
     
     def set_wave_type(self, wavetype:str):
@@ -29,31 +27,31 @@ class Keithley6221:
         Arbitary4   :ARB4
         """
         self.abort()
-        self.instrument.write(':SOUR:WAVE:FUNC ' + wavetype)
+        self.write(':SOUR:WAVE:FUNC ' + wavetype)
         return
     
     def get_wave_freq(self):
-        self.instrument.write(':SOUR:WAVE:FREQ?')
-        return float(self.instrument.read())
+        self.write(':SOUR:WAVE:FREQ?')
+        return float(self.read())
     
     def set_wave_freq(self, frequency:float):
-        self.instrument.write('SOUR:WAVE:FREQ ' + str(frequency))
+        self.write('SOUR:WAVE:FREQ ' + str(frequency))
         return 
     
     def get_wave_amplitude(self):
-        self.instrument.write(':SOUR:WAVE:AMPL?')
-        return float(self.instrument.read())
+        self.write(':SOUR:WAVE:AMPL?')
+        return float(self.read())
      
     def set_wave_amplitude(self, amplitude:float):
-        self.instrument.write(':SOUR:WAVE:AMPL ' + str(amplitude))
+        self.write(':SOUR:WAVE:AMPL ' + str(amplitude))
         return self.get_wave_amplitude()
 
     def get_wave_offset(self):
-        self.instrument.write(':SOUR:WAVE:OFFS?')
-        return float(self.instrument.read())
+        self.write(':SOUR:WAVE:OFFS?')
+        return float(self.read())
     
     def set_wave_offset(self, offset:float):
-        self.instrument.write(':SOUR:WAVE:OFFS ' + str(offset))
+        self.write(':SOUR:WAVE:OFFS ' + str(offset))
         return
     
     def set_wave_ranging_mode(self, mode:str):
@@ -61,7 +59,7 @@ class Keithley6221:
         Fixed   :FIX
         Best    :BEST
         """
-        self.instrument.write(':SOUR:WAVE:RANG ' + mode)
+        self.write(':SOUR:WAVE:RANG ' + mode)
         return
     
     def set_current_range(self, autorange:bool, selected_range:float):
@@ -79,45 +77,45 @@ class Keithley6221:
         100mA   :100E-3
         """
         if(autorange):
-            self.instrument.write('SOUR:CURR:RANG:AUTO 1')
+            self.write('SOUR:CURR:RANG:AUTO 1')
         else:
-            self.instrument.write('SOUR:CURR:RANG:AUTO 0')
-            self.instrument.write('SOUR:CURR:RANG ' + str(selected_range))
+            self.write('SOUR:CURR:RANG:AUTO 0')
+            self.write('SOUR:CURR:RANG ' + str(selected_range))
         return
 
     def get_wave_playback_time(self):
-        self.instrument.write(':SOUR:WAVE:DUR:TIME?')
-        return self.instrument.read()
+        self.write(':SOUR:WAVE:DUR:TIME?')
+        return self.read()
     
     def set_wave_playback_time(self, playback_time:float):
-        self.instrument.write(':SOUR:WAVE:DUR:TIME ' + str(playback_time))
+        self.write(':SOUR:WAVE:DUR:TIME ' + str(playback_time))
         return self.get_wave_playback_time()
 
     def get_wave_playback_num_cycles(self):
-        self.instrument.write(':SOUR:WAVE:DUR:CYCL?')
-        return self.instrument.read()
+        self.write(':SOUR:WAVE:DUR:CYCL?')
+        return self.read()
 
     def set_wave_playback_num_cycles(self, playback_num_cycles:float):
-        self.instrument.write(':SOUR:WAVE:DUR:CYCL ' + str(playback_num_cycles))
+        self.write(':SOUR:WAVE:DUR:CYCL ' + str(playback_num_cycles))
         return self.get_wave_playback_num_cycles()
     
     def set_wave_ph_mark_enab_state(self, enabele:bool):
         if(enabele):
-            self.instrument.write(':SOUR:WAVE:PMAR:STAT 1')
+            self.write(':SOUR:WAVE:PMAR:STAT 1')
         else:
-            self.instrument.write(':SOUR:WAVE:PMAR:STAT 0')
+            self.write(':SOUR:WAVE:PMAR:STAT 0')
         return
     
     def get_wave_ph_marker(self):
-        self.instrument.write(':SOUR:WAVE:PMAR:LEV?')
-        return self.instrument.read()
+        self.write(':SOUR:WAVE:PMAR:LEV?')
+        return self.read()
 
     def set_wave_ph_marker(self,phase_marker:float):
-        self.instrument.write(':SOUR:WAVE:PMAR:LEV ' + str(phase_marker))
+        self.write(':SOUR:WAVE:PMAR:LEV ' + str(phase_marker))
         return self.get_wave_ph_marker()
     
     def set_wave_ph_mark_trig_link_out_line(self, trig_link_out_line:int):
-        self.instrument.write('SOUR:WAVE:PMAR:OLIN ' + str(trig_link_out_line))
+        self.write('SOUR:WAVE:PMAR:OLIN ' + str(trig_link_out_line))
         return
 
 
@@ -148,17 +146,17 @@ class Keithley6221:
     
     def arm_waveform_func(self,wave_type:str, init_sweep:bool = True):
         self.set_wave_type(wave_type)
-        self.instrument.write(':SOUR:WAVE:ARM')
+        self.write(':SOUR:WAVE:ARM')
         if(init_sweep):
-            self.instrument.write(':SOUR:WAVE:INIT')
+            self.write(':SOUR:WAVE:INIT')
         return
 ## DC settings
     def set_current_level(self, current):
-        self.instrument.write(':SOUR:CURR ' + str(current))
+        self.write(':SOUR:CURR ' + str(current))
         return
 
     def set_voltage_limit(self, voltage_limit):
-        self.instrument.write(':SOUR:CURR:COMP ' +str(voltage_limit))
+        self.write(':SOUR:CURR:COMP ' +str(voltage_limit))
         return
 
     def set_direct_current_params(self, range, current, voltage_limit):
@@ -169,6 +167,6 @@ class Keithley6221:
     
     def set_output_state(self, flag):
         if(flag):
-            self.instrument.write(':OUTP 1')
+            self.write(':OUTP 1')
         else:
-            self.instrument.write(':OUTP 0')
+            self.write(':OUTP 0')
