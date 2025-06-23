@@ -1,19 +1,18 @@
-import pyvisa as visa
+from pymeasure.instruments import Instrument
 from enum import Enum
 
-class ADCMT6240:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
+class ADCMT6240(Instrument):
     
-    def __del__(self):
-        self.instrument.close()
-        return
+    def __init__(self, adapter, name="ADCMT6240", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
     
     def initialize(self):
-        self.instrument.write('C,*RST')
+        self.write('C,*RST')
         return
     
     class SourceFunctionType(Enum):
@@ -38,8 +37,8 @@ class ADCMT6240:
             self.OutputModeType.SWEEP:      'MD2',
             self.OutputModeType.PULSE_SWEEP:'MD3'
         }
-        self.instrument.write(source_map[source_function])
-        self.instrument.write(output_map[output_mode])
+        self.write(source_map[source_function])
+        self.write(output_map[output_mode])
         return
     
     def set_output_value(self, source_function:SourceFunctionType, outputvalue:float):
@@ -47,7 +46,7 @@ class ADCMT6240:
             self.SourceFunctionType.VOLTAGE: 'SOV',
             self.SourceFunctionType.CURRENT: 'SOI'
         }
-        self.instrument.write(source_map[source_function] + str(outputvalue))
+        self.write(source_map[source_function] + str(outputvalue))
         return
     
     def get_output_value(self, source_function:SourceFunctionType):
@@ -55,8 +54,8 @@ class ADCMT6240:
             self.SourceFunctionType.VOLTAGE: 'SOV',
             self.SourceFunctionType.CURRENT: 'SOI'
         }
-        self.instrument.write(source_map[source_function] + '?')
-        return float(self.instrument.read().strip()[3:])
+        self.write(source_map[source_function] + '?')
+        return float(self.read().strip()[3:])
 
     def configure_limiter(self, source_function:SourceFunctionType, limiter_value:float):
         """
@@ -66,20 +65,20 @@ class ADCMT6240:
             self.SourceFunctionType.VOLTAGE: 'LMI',
             self.SourceFunctionType.CURRENT: 'LMV'
         }
-        self.instrument.write(source_map[source_function] + str(limiter_value))
+        self.write(source_map[source_function] + str(limiter_value))
         return
 
 
     def operate_output(self):
-        self.instrument.write('OPR')
+        self.write('OPR')
         return
     
     def suspend_output(self):
-        self.instrument.write('SUS')
+        self.write('SUS')
         return
     
     def stanby_output(self):
-        self.instrument.write('SBY')
+        self.write('SBY')
         return
     
     class TriggerMode(Enum):
@@ -91,7 +90,7 @@ class ADCMT6240:
             self.TriggerMode.AUTO:  'M0',
             self.TriggerMode.HOLD:  'M1'
         }
-        self.instrument.write(trigger_map[trigger_mode])
+        self.write(trigger_map[trigger_mode])
         return
 
     class MeasurementType(Enum):
@@ -107,6 +106,5 @@ class ADCMT6240:
             self.MeasurementType.CURRENT:   'F2',
             self.MeasurementType.RESISTANCE:'F3'
         }
-        self.instrument.write(measurement_map[measurement_type])
+        self.write(measurement_map[measurement_type])
         return
-    
