@@ -77,7 +77,7 @@ class ADCMT6240(Instrument):
         self.write('SUS')
         return
     
-    def stanby_output(self):
+    def standby_output(self):
         self.write('SBY')
         return
     
