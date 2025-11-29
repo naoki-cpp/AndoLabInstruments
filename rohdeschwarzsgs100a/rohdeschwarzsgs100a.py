@@ -1,4 +1,5 @@
 from pymeasure.instruments import Instrument
+import inspect
 
 class  RohdeSchwarzSGS100A(Instrument):
     def __init__(self, adapter, name="RohdeSchwarzSGS100A", **kwargs):
@@ -22,7 +23,9 @@ class  RohdeSchwarzSGS100A(Instrument):
         self.write("SOUR:FREQ "+str(frequency)+" Hz")
         
         err = self.error()
-        if(err.split(',')[0] != '+0'):print(err)
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
 
         return
     
@@ -30,7 +33,9 @@ class  RohdeSchwarzSGS100A(Instrument):
         self.write("SOUR:POW:POW "+str(power))
 
         err = self.error()
-        if(err.split(',')[0] != '+0'):print(err)
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
 
         return
     
@@ -42,10 +47,12 @@ class  RohdeSchwarzSGS100A(Instrument):
             self.write('OUTP 0')
 
         err = self.error()
-        if(err.split(',')[0] != '+0'):print(err)
+        if(err.split(',')[0] != '0'):
+            raise Exception("Error" + str(err) + " occured in " + str(inspect.currentframe().f_back.f_code.co_name))
+        return err
 
         return
     
     def OPC(self):
         self.write("*OPC?")
-        return
+        return self.read()
