@@ -1,4 +1,5 @@
 from pymeasure.instruments import Instrument
+from enum import Enum
 import inspect
 
 class  RohdeSchwarzSGS100A(Instrument):
@@ -56,3 +57,26 @@ class  RohdeSchwarzSGS100A(Instrument):
     def OPC(self):
         self.write("*OPC?")
         return self.read()
+    
+    class AutoLevelControlMode(Enum):
+        OFFTABLE    =   'OFFTable'
+        OFF         =   'OFF'
+        ONTABLE     =   'ONTable'
+        AUTO        =   'AUTO'
+        ON          =   'ON'
+
+    def auto_level_control(self, mode:AutoLevelControlMode):
+        self.write(':SOURce:POWer:ALC:STATe '+ mode.value)
+        return
+
+    class DetectorSensitivity(Enum):
+        OFF =   'OFF'
+        LOW =   'LOW'
+        MED =   'MED'
+        HIGH=   'HIGH'
+
+    def detector_sensitivity(self, detector_mode:DetectorSensitivity):
+        self.write(':SOURce:POWer:ALC:DSENsitivity ' + detector_mode.value)
+        return
+
+
