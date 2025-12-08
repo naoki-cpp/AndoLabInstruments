@@ -118,7 +118,6 @@ class Keithley6221(Instrument):
         self.write('SOUR:WAVE:PMAR:OLIN ' + str(trig_link_out_line))
         return
 
-
     def set_sinewave_params(self, frequency:float, amplitude:float, offset:float, mode:str, range:float, playback_mode:str, playback_time:float, playback_cycle:float, phase_marker_enable:bool, phase_marker:float, trig_link_line:int):
         """
         playback_mode
@@ -144,8 +143,41 @@ class Keithley6221(Instrument):
         self.set_wave_ph_mark_trig_link_out_line(trig_link_line)
         return
     
-    def arm_waveform_func(self,wave_type:str, init_sweep:bool = True):
-        self.set_wave_type(wave_type)
+    def set_duty_cycles(self, duty_cycles):
+        """
+        Sets the duty cycle for square and ramp waveforms.
+
+        :param duty_cycles: Set duty cycle (in %): 0 to 100. 
+        """
+        self.write('SOUR:WAVE:DCYC ' + str(duty_cycles))
+        return
+
+    def set_squarewave_params(self, frequency:float, amplitude:float, offset:float, mode:str, range:float, duty_cycles:float, playback_mode:str, playback_time:float, playback_cycle:float, phase_marker_enable:bool, phase_marker:float, trig_link_line:int):
+        """
+        playback_mode
+        ----------
+        Time
+        Num Cycles
+        """
+        self.set_wave_type('SQU')
+        self.set_wave_freq(frequency)
+        self.set_wave_amplitude(amplitude)
+        self.set_wave_offset(offset)
+        self.set_wave_ranging_mode(mode)
+        self.set_duty_cycles(duty_cycles)
+        if mode == 'FIX':
+            self.set_current_range(False, range)
+        
+        if playback_mode == "Time":
+            self.set_wave_playback_time(playback_time)
+        elif playback_mode == "Num Cycles":
+            self.set_wave_playback_num_cycles(playback_cycle)
+        self.set_wave_ph_mark_enab_state(phase_marker_enable)
+        self.set_wave_ph_marker(phase_marker)
+        self.set_wave_ph_mark_trig_link_out_line(trig_link_line)
+        return
+
+    def arm_waveform_func(self, init_sweep:bool = True):
         self.write(':SOUR:WAVE:ARM')
         if(init_sweep):
             self.write(':SOUR:WAVE:INIT')
