@@ -14,8 +14,6 @@ class Keithley2000(Instrument):
     
     def initialize(self):
         self.write('*RST')
-        self.write('*SRE 48;*ESE 60;*CLS;')
-        self.configure_trigger(self.Source.IMMEDIATE)
         return
     
     def error(self):
@@ -68,7 +66,7 @@ class Keithley2000(Instrument):
         if(err.split(',')[0] != '0'):print(err)
         return
     
-    class Source(Enum):
+    class TriggerSource(Enum):
         IMMEDIATE   = 0
         TIMER       = 1
         MANUAL      = 2
@@ -79,19 +77,19 @@ class Keithley2000(Instrument):
         INFINITE    = 0
         CUSTOM      = 1
 
-    def configure_trigger(self, source:Source = Source.IMMEDIATE, timer_delay:float = 0.001, count_mode:CountMode = CountMode.INFINITE, custom_count:int = 1, enable_auto_delay:bool = True, delay:float = 0, init_continuous:bool=True):
+    def configure_trigger(self, source:TriggerSource = TriggerSource.IMMEDIATE, timer_delay:float = 0.001, count_mode:CountMode = CountMode.INFINITE, custom_count:int = 1, enable_auto_delay:bool = True, delay:float = 0):
 
         self.abort()
 
-        if(source == self.Source.IMMEDIATE):
+        if(source == self.TriggerSource.IMMEDIATE):
             self.write(':TRIG:SOUR IMM')
-        if(source == self.Source.TIMER):
+        if(source == self.TriggerSource.TIMER):
             self.write(':TRIG:SOUR TIM;TIM ' + str(timer_delay))
-        if(source == self.Source.MANUAL):
+        if(source == self.TriggerSource.MANUAL):
             self.write(':TRIG:SOUR MAN')
-        if(source == self.Source.BUS):
+        if(source == self.TriggerSource.BUS):
             self.write(':TRIG:SOUR BUS')
-        if(source == self.Source.EXTERNAL):
+        if(source == self.TriggerSource.EXTERNAL):
             self.write(':TRIG:SOUR EXT')
         
         if(count_mode == self.CountMode.INFINITE):
@@ -104,15 +102,15 @@ class Keithley2000(Instrument):
         else:
             self.write(':TRIG:DEL:AUTO OFF')
             self.write(':TRIG:DEL ' + str(delay))
-        self.init_trigger(init_continuous)
         err = self.error()
         if(err.split(',')[0] != '0'):print(err)
         
         return
-    def send_trigger(self):
-        self.write('*TRG')
-        err = self.error()
-        if(err.split(',')[0] != '0'):print(err)
+    
+    def initiate_measurement(self):
+        self.write(':FORM ASC')
+        self.write(':FORM:ELEM READ,UNIT,CHAN')
+        self.write('INITiate')
         return
     
     class SOURCE(Enum):
@@ -144,6 +142,7 @@ class Keithley2000(Instrument):
         if(err.split(',')[0] != '0'):print(err)
         
         return voltage, unit, channel
+    
     def wait_for_srq(self, command, timeout=25000):
         # Type of event we want to be notified about
         event_type = constants.EventType.service_request
@@ -181,7 +180,6 @@ class Keithley2000(Instrument):
                 self.write(':TEMP:TC:RJUN:REAL:TCO ' + str(temperature_coefficient))
                 self.write(':TEMP:TC:RJUN:REAL:OFFSET ' + str(voltage_offset))
         return
-    
     class RESOLUTION(Enum):
         _3_5_Digits = 4
         _4_5_Digits = 5
@@ -242,4 +240,3 @@ class Keithley2000(Instrument):
     def close_single_channel(self, channel:int):
         self.write(':ROUTE:CLOSe (@%d)' % channel)
         return
-    
