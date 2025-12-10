@@ -1,5 +1,4 @@
 from pymeasure.instruments import Instrument
-import pyvisa as visa
 from enum import Enum
 
 class LI5640(Instrument):
