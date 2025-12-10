@@ -2,7 +2,7 @@ from pymeasure.instruments import Instrument
 from enum import Enum
 
 class LI5650(Instrument):
-    def __init__(self, adapter, name="Keithley6221", **kwargs):
+    def __init__(self, adapter, name="LI5650", **kwargs):
         super().__init__(
             adapter,
             name,
