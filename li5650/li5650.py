@@ -1,19 +1,17 @@
-import pyvisa as visa
+from pymeasure.instruments import Instrument
 from enum import Enum
 
-class LI5650:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
-    
-    def __del__(self):
-        self.instrument.close()
-        return
+class LI5650(Instrument):
+    def __init__(self, adapter, name="Keithley6221", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
     
     def initialize(self):
-        self.instrument.write('*RST')
+        self.write('*RST')
         return
     
     def data(self, read:bool, measurement_data:int):
@@ -43,10 +41,10 @@ class LI5650:
             CASCADE.
         """
         if(read):
-            self.instrument.write('DATA?')
-            return float(self.instrument.read())
+            self.write('DATA?')
+            return float(self.read())
         else:
-            self.instrument.write('DATA ' + str(measurement_data))
+            self.write('DATA ' + str(measurement_data))
             return 0
     
     def coupling(self, read:bool, coupling:str):
@@ -57,10 +55,10 @@ class LI5650:
         DC  :DC
         """
         if(read):
-            self.instrument.write(':INP:COUP?')
-            return str.strip(self.instrument.read())
+            self.write(':INP:COUP?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('INP:COUP ' + coupling)
+            self.write('INP:COUP ' + coupling)
             return ""
     
     def low(self, read:bool, grounding:str):
@@ -71,10 +69,10 @@ class LI5650:
         ground  :GROund
         """
         if(read):
-            self.instrument.write(':INP:LOW?')
-            return str.strip(self.instrument.read())
+            self.write(':INP:LOW?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':INP:LOW ' + grounding)
+            self.write(':INP:LOW ' + grounding)
             return ""
     
     def gain(self, read:bool, gain:str):
@@ -85,10 +83,10 @@ class LI5650:
         100MV/A 10nAmax :IE8
         """
         if(read):
-            self.instrument.write(':INP:GAIN?')
-            return str.strip(self.instrument.read())
+            self.write(':INP:GAIN?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':INP:GAIN ' + str(gain))
+            self.write(':INP:GAIN ' + str(gain))
             return 0
         
     def rout_signal_input(self, read:bool, input:str):
@@ -102,10 +100,10 @@ class LI5650:
         HF  :HF
         """
         if(read):
-            self.instrument.write(':ROUT?')
-            return str.strip(self.instrument.read())
+            self.write(':ROUT?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':ROUT ' + input)
+            self.write(':ROUT ' + input)
             return ""
 
     
@@ -125,10 +123,10 @@ class LI5650:
         CASCade :2-frequency cascade mode
         """
         if(read):
-            self.instrument.write(':SENS:DET?')
-            return str.strip(self.instrument.read())
+            self.write(':SENS:DET?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':SENS:DET ' + mode)
+            self.write(':SENS:DET ' + mode)
             return ""
 
     def data1_format(self, read:bool, format:str):
@@ -143,10 +141,10 @@ class LI5650:
         Rs                              :MLINear2
         """
         if(read):
-            self.instrument.write(':CALC1:FORM?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC1:FORM?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC1:FORM ' + format)
+            self.write(':CALC1:FORM ' + format)
             return 0
     
     def data2_format(self, read:bool, format:str):
@@ -162,10 +160,10 @@ class LI5650:
         Θs                              :PHASe2
         """
         if(read):
-            self.instrument.write(':CALC2:FORM?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC2:FORM?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC2:FORM ' + format)
+            self.write(':CALC2:FORM ' + format)
             return 0
 
     def data3_format(self, read:bool, format:str):
@@ -178,10 +176,10 @@ class LI5650:
         Rs                              :MLINear2
         """
         if(read):
-            self.instrument.write(':CALC3:FORM?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC3:FORM?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC3:FORM ' + format)
+            self.write(':CALC3:FORM ' + format)
             return 0
     def data4_format(self, read:bool, format:str):
         """
@@ -193,10 +191,10 @@ class LI5650:
         Θs                              :PHASe2
         """
         if(read):
-            self.instrument.write(':CALC4:FORM?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC4:FORM?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC4:FORM ' + format)
+            self.write(':CALC4:FORM ' + format)
             return 0
     
     def set_data_format(self, data1:str, data2:str, data3:str, data4:str):
@@ -210,40 +208,40 @@ class LI5650:
         """
         """
         if(read):
-            self.instrument.write(':CALC1:OFFS?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC1:OFFS?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC1:OFFS ' + str(offset))
+            self.write(':CALC1:OFFS ' + str(offset))
             return 0
     
     def data2_offset(self, read:bool, offset:float):
         """
         """
         if(read):
-            self.instrument.write(':CALC2:OFFS?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC2:OFFS?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC2:OFFS ' + str(offset))
+            self.write(':CALC2:OFFS ' + str(offset))
             return 0
 
     def data3_offset(self, read:bool, offset:float):
         """
         """
         if(read):
-            self.instrument.write(':CALC3:OFFS?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC3:OFFS?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC3:OFFS ' + str(offset))
+            self.write(':CALC3:OFFS ' + str(offset))
             return 0
     
     def data4_offset(self, read:bool, offset:float):
         """
         """
         if(read):
-            self.instrument.write(':CALC4:OFFS?')
-            return str.strip(self.instrument.read())
+            self.write(':CALC4:OFFS?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':CALC4:OFFS ' + str(offset))
+            self.write(':CALC4:OFFS ' + str(offset))
             return 0
     
     class Detector(Enum):
@@ -258,10 +256,10 @@ class LI5650:
         2   :secondary
         """
         if(read):
-            self.instrument.write(':SENS:VOLT' + str(detector.value) +':AC:RANG?')
-            return str.strip(self.instrument.read())
+            self.write(':SENS:VOLT' + str(detector.value) +':AC:RANG?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':SENS:VOLT' + str(detector.value) +':AC:RANG ' + str(sensitivity))
+            self.write(':SENS:VOLT' + str(detector.value) +':AC:RANG ' + str(sensitivity))
             return 0
     
     def curr_sensitivity(self, read:bool, detector:Detector, sensitivity:float):
@@ -272,10 +270,10 @@ class LI5650:
         2   :secondary
         """
         if(read):
-            self.instrument.write(':SENS:CURR' + str(detector.value) +':AC:RANG?')
-            return str.strip(self.instrument.read())
+            self.write(':SENS:CURR' + str(detector.value) +':AC:RANG?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':SENS:CURR' + str(detector.value) +':AC:RANG ' + str(sensitivity))
+            self.write(':SENS:CURR' + str(detector.value) +':AC:RANG ' + str(sensitivity))
             return 0
     
     def set_sensitivity(self, detector:Detector, sensitivity:float):
@@ -301,10 +299,10 @@ class LI5650:
         low     :LOW
         """
         if(read):
-            self.instrument.write(':DRES?')
-            return str.strip(self.instrument.read())
+            self.write(':DRES?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':DRES ' + dynamic_reserve)
+            self.write(':DRES ' + dynamic_reserve)
             return ""
     
     #Filter setings
@@ -323,10 +321,10 @@ class LI5650:
 
         """
         if(read):
-            self.instrument.write(':FILT' + str(detector.value) +':TYPE?')
-            return str.strip(self.instrument.read())
+            self.write(':FILT' + str(detector.value) +':TYPE?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':FILT:TYPE ' + filter_slope)
+            self.write(':FILT:TYPE ' + filter_slope)
             return ""
     def filter_time_constant(self, read:bool, detector:Detector, time_constant:float):
         """
@@ -336,10 +334,10 @@ class LI5650:
         2   :secondary
         """
         if(read):
-            self.instrument.write(':FILT' + str(detector.value) +':TCON?')
-            return float(self.instrument.read())
+            self.write(':FILT' + str(detector.value) +':TCON?')
+            return float(self.read())
         else:
-            self.instrument.write(':FILT' + str(detector.value) +':TCON ' + str(time_constant))
+            self.write(':FILT' + str(detector.value) +':TCON ' + str(time_constant))
             return ""
     
     def filter_slope(self, read:bool, detector:Detector, slope:int):
@@ -357,10 +355,10 @@ class LI5650:
         24
         """
         if(read):
-            self.instrument.write(':FILT' + str(detector.value) +':SLOP?')
-            return int(self.instrument.read())
+            self.write(':FILT' + str(detector.value) +':SLOP?')
+            return int(self.read())
         else:
-            self.instrument.write(':FILT' + str(detector.value) +':SLOP ' + str(slope))
+            self.write(':FILT' + str(detector.value) +':SLOP ' + str(slope))
             return ""
     
     # reference settings
@@ -373,10 +371,10 @@ class LI5650:
         signal input        :SINPut
         """
         if(read):
-            self.instrument.write(':ROUT2?')
-            return str.strip(self.instrument.read())
+            self.write(':ROUT2?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':ROUT2 ' + reference)
+            self.write(':ROUT2 ' + reference)
             return ""
     
     def reference_type(self, read:bool, reference_type:str):
@@ -388,18 +386,18 @@ class LI5650:
         neg     :TNEG
         """
         if(read):
-            self.instrument.write(':INP2:TYPE?')
-            return int(self.instrument.read())
+            self.write(':INP2:TYPE?')
+            return int(self.read())
         else:
-            self.instrument.write(':INP2:TYPE ' + reference_type)
+            self.write(':INP2:TYPE ' + reference_type)
             return ""
         
     def phase_shift(self, read:bool, detector:Detector, phase_shift:float):
         if(read):
-            self.instrument.write(':PHAS' + str(detector.value) +'?')
-            return int(self.instrument.read())
+            self.write(':PHAS' + str(detector.value) +'?')
+            return int(self.read())
         else:
-            self.instrument.write(':PHAS' + str(detector.value) + ' ' + str(phase_shift))
+            self.write(':PHAS' + str(detector.value) + ' ' + str(phase_shift))
             return ""
     
     def data_transfer_format(self, read:bool, format:str):
@@ -411,17 +409,17 @@ class LI5650:
         integer :INTeger
         """
         if(read):
-            self.instrument.write(':FORM?')
-            return str.strip(self.instrument.read())
+            self.write(':FORM?')
+            return str.strip(self.read())
         else:
-            self.instrument.write(':FORM ' + format)
+            self.write(':FORM ' + format)
             return ""
     
     def read_data(self):
         data_type = self.data_transfer_format(True, '')
-        self.instrument.write(':FETC?')
+        self.write(':FETC?')
         if (data_type == 'ASC'):
-            data = self.instrument.read()
+            data = self.read()
             return [float(x) for x in data.split(',')]
         elif data_type == 'REAL':
             return #data
@@ -441,13 +439,13 @@ class LI5650:
         OFF
         """
         if(read):
-            self.instrument.write(':FREQ' + str(detector.value) +':HARM?')
-            freq_harm = str.strip(self.instrument.read())
-            self.instrument.write(':FREQ' + str(detector.value) +':MULT?')
-            freq_multi = str.strip(self.instrument.read())
+            self.write(':FREQ' + str(detector.value) +':HARM?')
+            freq_harm = str.strip(self.read())
+            self.write(':FREQ' + str(detector.value) +':MULT?')
+            freq_multi = str.strip(self.read())
             return [freq_harm, freq_multi]
         else:
-            self.instrument.write(':FREQ' + str(detector.value) +':HARM ' + enable)
+            self.write(':FREQ' + str(detector.value) +':HARM ' + enable)
             if(enable == 'ON'):
-                self.instrument.write(':FREQ' + str(detector.value) +':MULT ' + str(order))
+                self.write(':FREQ' + str(detector.value) +':MULT ' + str(order))
             return ""
