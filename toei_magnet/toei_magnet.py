@@ -63,6 +63,8 @@ class toei_magnet(Instrument):
         print("org:",org())
 
     def rotation_in_plane(self,angle,speed=0):
+        if angle > 360:
+            raise ValueError("Angle is too large. Angle must be set less than 360 deg.")
         move = self.lvdll._sub_Motor_Move_Stop
         move .argtypes = [c_double, c_int]
         move.restype = c_int
