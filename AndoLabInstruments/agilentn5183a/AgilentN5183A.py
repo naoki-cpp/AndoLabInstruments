@@ -1,40 +1,38 @@
-import pyvisa as visa
+from pymeasure.instruments import Instrument
 from enum import Enum
 
-class AgilentN5183A:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
-       
-    def __del__(self):
-        self.instrument.close()
-        return
-    
+class AgilentN5183A(Instrument):
+    def __init__(self, adapter, name="AgilentN5183A", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
+        
     def initialize(self):
-        self.instrument.write('*RST')
+        self.write('*RST')
         return
     
     def error(self):
-        self.instrument.write(':SYST:ERR?')
-        return self.instrument.read()
+        self.write(':SYST:ERR?')
+        return self.read()
 
     def configure_frequency(self, frequency:float, enable_reference:bool = False, reference_frequency:float = 0, offset_frequency:float = 0, frequency_multiplier:float = 1, phase_adjustment:float = 0, phase_noise_offsets:int = 1):
         '''
         configure output frequency(Hz)
         '''
-        self.instrument.write(':FREQ:MODE FIX')
-        self.instrument.write(':FREQ '+ str(frequency) +' HZ;')
+        self.write(':FREQ:MODE FIX')
+        self.write(':FREQ '+ str(frequency) +' HZ;')
         if(enable_reference):
-            self.instrument.write(':FREQ:REF:STAT ON')
-            self.instrument.write(':FREQ:REF ' + str(reference_frequency) + ' HZ')
+            self.write(':FREQ:REF:STAT ON')
+            self.write(':FREQ:REF ' + str(reference_frequency) + ' HZ')
         else:
-            self.instrument.write(':FREQ:REF:STAT OFF')
-        self.instrument.write(':FREQ:OFFS ' + str(offset_frequency) +' HZ')
-        self.instrument.write(':FREQ:MULT ' + str(frequency_multiplier))
-        self.instrument.write(':PHAS ' + str(phase_adjustment) + ' RAD')
-        self.instrument.write(':FREQ:SYNT ' + str(phase_noise_offsets))
+            self.write(':FREQ:REF:STAT OFF')
+        self.write(':FREQ:OFFS ' + str(offset_frequency) +' HZ')
+        self.write(':FREQ:MULT ' + str(frequency_multiplier))
+        self.write(':PHAS ' + str(phase_adjustment) + ' RAD')
+        self.write(':FREQ:SYNT ' + str(phase_noise_offsets))
 
         err = self.error()
         if(err.split(',')[0] != '+0'):print(err)
@@ -45,21 +43,21 @@ class AgilentN5183A:
         '''
         configure output power(dBm)
         '''
-        self.instrument.write(':POW:MODE FIX')
-        self.instrument.write(':POW '+ str(power) +' DBM')
+        self.write(':POW:MODE FIX')
+        self.write(':POW '+ str(power) +' DBM')
         if (enable_reference):
-            self.instrument.write(':POW:REF:STAT ON')
-            self.instrument.write(':POW:REF ' + str(reference_power) + ' DBM')
+            self.write(':POW:REF:STAT ON')
+            self.write(':POW:REF ' + str(reference_power) + ' DBM')
         else:
-            self.instrument.write(':POW:REF:STAT OFF')
+            self.write(':POW:REF:STAT OFF')
 
-        self.instrument.write(':POW:OFFS ' + str(offset_power) + ' DB')
+        self.write(':POW:OFFS ' + str(offset_power) + ' DB')
 
         if(attenuator_auto_mode):
-            self.instrument.write(':POW:ATT:AUTO ON')
-            self.instrument.write(':POW:ATT ' + str(attenuation_level) + ' DB')
+            self.write(':POW:ATT:AUTO ON')
+            self.write(':POW:ATT ' + str(attenuation_level) + ' DB')
         else:
-            self.instrument.write(':POW:ATT:AUTO OFF')
+            self.write(':POW:ATT:AUTO OFF')
         
         err = self.error()
         if(err.split(',')[0] != '+0'):print(err)
@@ -85,18 +83,18 @@ class AgilentN5183A:
         configure auto level control
         '''
         if(enable_alc):
-            self.instrument.write(':POW:ALC ON')
-            self.instrument.write(':POW:ALC:LEV ' + str(alc_level) + ' DB')
+            self.write(':POW:ALC ON')
+            self.write(':POW:ALC:LEV ' + str(alc_level) + ' DB')
             if(enable_automatic_bandwidth):
-                self.instrument.write(':POW:ALC:BAND:AUTO ON')
+                self.write(':POW:ALC:BAND:AUTO ON')
             else:
-                self.instrument.write(':POW:ALC:BAND:AUTO OFF')
-                self.instrument.write(':POW:ALC:BAND ' + bandwidth.value)
-            self.instrument.write(':POW:ALC:SOUR ' + alcsource.value)
+                self.write(':POW:ALC:BAND:AUTO OFF')
+                self.write(':POW:ALC:BAND ' + bandwidth.value)
+            self.write(':POW:ALC:SOUR ' + alcsource.value)
             if(alcsource == self.ALCSource.EXTERNAL_DETECTOR):
-                self.instrument.write(':POW:ALC:SOUR:EXT:COUP ' + str(external_detector_coupling_factor) +' DB')
+                self.write(':POW:ALC:SOUR:EXT:COUP ' + str(external_detector_coupling_factor) +' DB')
         else:
-            self.instrument.write(':POW:ALC OFF')
+            self.write(':POW:ALC OFF')
 
         err = self.error()
         if(err.split(',')[0] != '+0'):print(err)
@@ -117,15 +115,15 @@ class AgilentN5183A:
 
     def configure_pulse_modulation(self, enable_pulse:bool, pulse_source:PulseSource = PulseSource.INTERNAL, internal_source:InternalSource = InternalSource.FREE_RUN, pulse_period:float = 3E-6, pulse_width = 1.5E-6):
         if(enable_pulse):
-            self.instrument.write(':PULM:STAT ON')
-            self.instrument.write(':PULM:SOURce ' + pulse_source.value)
+            self.write(':PULM:STAT ON')
+            self.write(':PULM:SOURce ' + pulse_source.value)
             if(pulse_source == self.PulseSource.INTERNAL):
-                self.instrument.write(':PULM:Source:INTernal ' + internal_source.value)
-                self.instrument.write(':PULM:INTernal:PERiod ' + str(pulse_period))
-                self.instrument.write(':PULM:INTernal:PWIDth ' + str(pulse_width))
-                self.instrument.write(':ROUTe:TOUT PSYNc')
+                self.write(':PULM:Source:INTernal ' + internal_source.value)
+                self.write(':PULM:INTernal:PERiod ' + str(pulse_period))
+                self.write(':PULM:INTernal:PWIDth ' + str(pulse_width))
+                self.write(':ROUTe:TOUT PSYNc')
         else:
-            self.instrument.write(':PULM:STAT OFF')
+            self.write(':PULM:STAT OFF')
             return
 
 
@@ -134,19 +132,19 @@ class AgilentN5183A:
         return
     def output_settings(self, enable_modulation:bool = True, enable_auto_blanking:bool = True, enable_blanking:bool = True):
         if(enable_modulation):
-            self.instrument.write(':OUTP:MOD ON')
+            self.write(':OUTP:MOD ON')
         else:
-            self.instrument.write(':OUTP:MOD OFF')
+            self.write(':OUTP:MOD OFF')
         
         if(enable_auto_blanking):
-            self.instrument.write(':OUTP:BLAN:AUTO ON')
+            self.write(':OUTP:BLAN:AUTO ON')
         else:
-            self.instrument.write(':OUTP:BLAN:AUTO OFF')
+            self.write(':OUTP:BLAN:AUTO OFF')
         
         if(enable_blanking):
-            self.instrument.write(':OUTP:BLAN:STAT ON')
+            self.write(':OUTP:BLAN:STAT ON')
         else:
-            self.instrument.write(':OUTP:BLAN:STAT OFF')
+            self.write(':OUTP:BLAN:STAT OFF')
 
         err = self.error()
         if(err.split(',')[0] != '+0'):print(err)
@@ -154,9 +152,9 @@ class AgilentN5183A:
 
     def output(self, enable_output:bool):
         if(enable_output):
-            self.instrument.write(':OUTP ON')
+            self.write(':OUTP ON')
         else:
-            self.instrument.write(':OUTP OFF')
+            self.write(':OUTP OFF')
 
         err = self.error()
         if(err.split(',')[0] != '+0'):print(err)
