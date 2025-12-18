@@ -1,7 +1,7 @@
 from pymeasure.instruments import Instrument
 from enum import Enum
 
-class PBZ20_20:
+class PBZ20_20(Instrument):
     def __init__(self, adapter, name="PBZ20_20", **kwargs):
         super().__init__(
             adapter,
