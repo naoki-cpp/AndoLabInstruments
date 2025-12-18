@@ -1,10 +1,7 @@
-#%%
 from li5650 import LI5650
-import pyvisa as visa
-#%%
+
 if __name__ == "__main__":
-    rm=visa.ResourceManager() 
-    li5650 = LI5650(rm.open_resource("GPIB0::7::INSTR"))
+    li5650 = LI5650("GPIB0::7::INSTR")
     li5650.initialize()
     li5650.data(False, 31) #set read data format. STATUS, DATA1, DATA2, DATA3, DATA4
     #Data Format
