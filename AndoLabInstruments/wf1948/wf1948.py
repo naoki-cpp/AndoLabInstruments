@@ -1,19 +1,16 @@
-import pyvisa as visa
 from enum import Enum
 
 class WF1948:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
-    
-    def __del__(self):
-        self.instrument.close()
-        return
+    def __init__(self, adapter, name="WF1948", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
     
     def initialize(self):
-        self.instrument.write('*RST')
+        self.write('*RST')
     
     class Channel(Enum):
         CH1 = 1
@@ -25,10 +22,10 @@ class WF1948:
         unit    :M, K, HZ, U, N, USER
         """
         if(read):
-            self.instrument.write('SOUR' + str(channel) + ':FREQ?')
-            return str.strip(self.instrument.read())
+            self.write('SOUR' + str(channel) + ':FREQ?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('SOUR' + str(channel) + ':FREQ ' + str(frequency) + unit)
+            self.write('SOUR' + str(channel) + ':FREQ ' + str(frequency) + unit)
             return ""
     
     def set_voltage(self, read:bool, channel:Channel, voltage:float, unit:str):
@@ -37,13 +34,13 @@ class WF1948:
         unit    :M, K, HZ, U, N, USER
         """
         if(read):
-            self.instrument.write('SOUR' + str(channel) + ':VOLT:LEV:IMM:AMPL?')
-            read_voltage = str.strip(self.instrument.read())
-            self.instrument.write('SOUR' + str(channel) + ':VOLT:LEV:IMM:AMPL:UNIT?')
-            read_unit = str.strip(self.instrument.read())
+            self.write('SOUR' + str(channel) + ':VOLT:LEV:IMM:AMPL?')
+            read_voltage = str.strip(self.read())
+            self.write('SOUR' + str(channel) + ':VOLT:LEV:IMM:AMPL:UNIT?')
+            read_unit = str.strip(self.read())
             return [read_voltage, read_unit]
         else:
-            self.instrument.write('SOUR' + str(channel) + ':VOLT:LEV:IMM:AMPL ' + str(voltage) + unit)
+            self.write('SOUR' + str(channel) + ':VOLT:LEV:IMM:AMPL ' + str(voltage) + unit)
             return []
         
     def set_function(self, read:bool, channel:Channel, function:str):
@@ -59,10 +56,10 @@ class WF1948:
         USER        :arbitary wave
         """
         if(read):
-            self.instrument.write('SOUR' + str(channel) + ':FUNC?')
-            return str.strip(self.instrument.read())
+            self.write('SOUR' + str(channel) + ':FUNC?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('SOUR' + str(channel) + ':FUNC ' + function)
+            self.write('SOUR' + str(channel) + ':FUNC ' + function)
             return ""
 
     
@@ -71,8 +68,9 @@ class WF1948:
         enable  :0:OFF, 1:ON
         """
         if(read):
-            self.instrument.write('OUTP' + str(channel) + '?')
-            return str.strip(self.instrument.read())
+            self.write('OUTP' + str(channel) + '?')
+            return str.strip(self.read())
         else:
-            self.instrument.write('OUTP' + str(channel) + ' ' + str(enable))
+            self.write('OUTP' + str(channel) + ' ' + str(enable))
             return
+
