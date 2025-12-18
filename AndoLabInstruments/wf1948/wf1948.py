@@ -1,6 +1,7 @@
+from pymeasure.instruments import Instrument
 from enum import Enum
 
-class WF1948:
+class WF1948(Instrument):
     def __init__(self, adapter, name="WF1948", **kwargs):
         super().__init__(
             adapter,
@@ -73,4 +74,5 @@ class WF1948:
         else:
             self.write('OUTP' + str(channel) + ' ' + str(enable))
             return
+
 
