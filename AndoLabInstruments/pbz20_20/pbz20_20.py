@@ -1,19 +1,17 @@
-import pyvisa as visa
+from pymeasure.instruments import Instrument
 from enum import Enum
 
 class PBZ20_20:
-    def __init__(self, instrument:visa.Resource):
-        self.instrument = instrument
-        idn = instrument.query('*IDN?')
-        print(idn)
-        return
-    
-    def __del__(self):
-        self.instrument.close()
-        return
+    def __init__(self, adapter, name="PBZ20_20", **kwargs):
+        super().__init__(
+            adapter,
+            name,
+            includeSCPI = False,
+            **kwargs
+        )
     
     def initialize(self):
-        self.instrument.write('*RST')
+        self.write('*RST')
 
         err = self.error()
         if(err.split(',')[0] != '0'):print(err)
@@ -21,14 +19,14 @@ class PBZ20_20:
         return
     
     def error(self):
-        self.instrument.write(':SYST:ERR?')
-        return self.instrument.read()
+        self.write(':SYST:ERR?')
+        return self.read()
     
     def output(self, enable:bool):
         if(enable):
-            self.instrument.write('OUTPut:STATe:IMMediate 1')
+            self.write('OUTPut:STATe:IMMediate 1')
         else:
-            self.instrument.write('OUTPut:STATe:IMMediate 0')
+            self.write('OUTPut:STATe:IMMediate 0')
         
         err = self.error()
         if(err.split(',')[0] != '0'):print(err)
@@ -36,7 +34,7 @@ class PBZ20_20:
         return
 
     def set_voltage(self, voltage:float):
-        self.instrument.write('VOLT ' + str(voltage))
+        self.write('VOLT ' + str(voltage))
         
         err = self.error()
         if(err.split(',')[0] != '0'):print(err)
@@ -44,7 +42,7 @@ class PBZ20_20:
         return
     
     def clear_protection(self):
-        self.instrument.write('OUTPut:PROTection:CLEar')
+        self.write('OUTPut:PROTection:CLEar')
         
         err = self.error()
         if(err.split(',')[0] != '0'):print(err)
@@ -60,9 +58,9 @@ class PBZ20_20:
         Sets the mode (V-LIMIT or OVP) of the overvoltage protection features.
         '''
         if(mode == self.PROT_MODE.LIMIT):
-            self.instrument.write('VOLTage:PROTection:STATe LIMit')
+            self.write('VOLTage:PROTection:STATe LIMit')
         if(mode == self.PROT_MODE.TRIP):
-            self.instrument.write('VOLTage:PROTection:STATe TRIP')
+            self.write('VOLTage:PROTection:STATe TRIP')
         return
 
     def set_OCP_mode(self, mode:PROT_MODE):
@@ -70,19 +68,19 @@ class PBZ20_20:
         Sets the mode (I or OCP) of the overcurrent protection features.
         '''
         if(mode == self.PROT_MODE.LIMIT):
-            self.instrument.write('CURRent:PROTection:STATe LIMit')
+            self.write('CURRent:PROTection:STATe LIMit')
         if(mode == self.PROT_MODE.TRIP):
-            self.instrument.write('CURRent:PROTection:STATe TRIP')
+            self.write('CURRent:PROTection:STATe TRIP')
         return
     
     def set_OVP_limit(self, under:float, over:float):
-        self.instrument.write('VOLTage:PROTection:UNDer ' + str(under))
-        self.instrument.write('VOLTage:PROTection:OVER ' + str(over))
+        self.write('VOLTage:PROTection:UNDer ' + str(under))
+        self.write('VOLTage:PROTection:OVER ' + str(over))
         return
 
     def set_OCP_limit(self, under:float, over:float):
-        self.instrument.write('CURRent:PROTection:UNDer ' + str(under))
-        self.instrument.write('CURRent:PROTection:OVER ' + str(over))
+        self.write('CURRent:PROTection:UNDer ' + str(under))
+        self.write('CURRent:PROTection:OVER ' + str(over))
         return
     
     def set_OVP_limit_abs(self, unsigned_limit:float):
@@ -94,4 +92,4 @@ class PBZ20_20:
         return
     
     def set_soft_start_timer(self, time:float):
-        self.instrument.write('TRIGger:OUTPut:SSTart:RISE ' + str(time))
+        self.write('TRIGger:OUTPut:SSTart:RISE ' + str(time))
