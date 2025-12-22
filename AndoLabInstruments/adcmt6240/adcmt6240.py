@@ -68,6 +68,40 @@ class ADCMT6240(Instrument):
         self.write(source_map[source_function] + str(limiter_value))
         return
 
+    class SourceCurrentRangeType(Enum):
+        """
+        SIRX:Optimal range #defalut
+        SIR-1:30μA range
+        SIR0: 300μA range
+        SIR1: 3mA range
+        SIR2: 30mA range
+        SIR3: 300 mA range
+        SIR4: 1 A range
+        SIR5: 4A range
+        SIR?:Response: SIRX-1 to SIRX5 (for the optimal range),SIR-1 to SIR5 (for the fixed range)
+        """
+        Optimal = 0
+        I_30uA  = 1
+        I_300uA = 2
+        I_3mA   = 3
+        I_30mA  = 4
+        I_300mA = 5
+        I_1A    = 6
+        I_4A    =7
+        
+    def configure_current_range(self, current_range: SourceCurrentRangeType):
+        current_range_map = {
+            self.SourceCurrentRangeType.Optimal :'SIRX',
+            self.SourceCurrentRangeType.I_30uA  :'SIR-1',
+            self.SourceCurrentRangeType.I_300uA :'SIR0',
+            self.SourceCurrentRangeType.I_3mA   :'SIR1',
+            self.SourceCurrentRangeType.I_30mA  :'SIR2',
+            self.SourceCurrentRangeType.I_300mA :'SIR3',
+            self.SourceCurrentRangeType.I_1A    :'SIR4',
+            self.SourceCurrentRangeType.I_4A    :'SIR5'
+        }
+        self.write(current_range_map[current_range])
+        return
 
     def operate_output(self):
         self.write('OPR')
