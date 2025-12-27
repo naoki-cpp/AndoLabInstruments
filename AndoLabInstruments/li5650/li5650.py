@@ -360,7 +360,48 @@ class LI5650(Instrument):
         else:
             self.write(':FILT' + str(detector.value) +':SLOP ' + str(slope))
             return ""
+        
+    def notch_filter_frequency(self, read:bool, freq:int):
+        """
+        freq 
+        ------
+        line frequency
+        """
+        if(read):
+            self.write(':INP:FILT:NOTC1:FREQ?')
+            return int(self.read())
+        else:
+            self.write(':INP:FILT:NOTC1:FREQ ' + str(freq))
+            return ""
     
+    def enable_fundamental_notch_filter(self, read:bool, state:int):
+        """
+        state 
+        ------
+        0   :OFF
+        1   :ON
+        """
+        if(read):
+            self.write(':INP:FILT:NOTC1:STATe?')
+            return int(self.read())
+        else:
+            self.write(':INP:FILT:NOTC1:STATe ' + str(state))
+            return ""
+    
+    def enable_harmonic_notch_filter(self, read:bool, state:int):
+        """
+        state 
+        ------
+        0   :OFF
+        1   :ON
+        """
+        if(read):
+            self.write(':INP:FILT:NOTC2:STATe?')
+            return int(self.read())
+        else:
+            self.write(':INP:FILT:NOTC2:STATe ' + str(state))
+            return ""
+
     # reference settings
     def reference_source(self, read:bool, reference:str):
         """
