@@ -109,7 +109,7 @@ class ADCMT6240(Instrument):
         SVR3: 300 mV range
         SVR4: 3 V range
         SVR5: 15V range
-        SVR?:Response: SVR3 to SVRX5 (for the optimal range),SIR-1 to SIR5 (for the fixed range)
+        SVR?:Response: SVRX (for the optimal range), SVR3 to SVR5 (for the fixed range)
         """
         Optimal = 0
         V_300mV = 1
